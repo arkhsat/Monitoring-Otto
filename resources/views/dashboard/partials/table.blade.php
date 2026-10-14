@@ -16,7 +16,7 @@
             </thead>
 
             <!-- Table Body -->
-            <tbody class="divide-y divide-slate-100 text-slate-800 text-sm md:text-base">
+            <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-800 text-sm md:text-base">
                 @php
                     $records = $records ?? [
                         ['date' => 'Kamis, 1 Oktober 2026', 'admin' => '900.000', 'mdd' => '960.000', 'report' => '900.000', 'status' => 'Tidak Cocok'],

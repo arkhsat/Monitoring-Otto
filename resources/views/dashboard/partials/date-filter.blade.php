@@ -15,82 +15,60 @@
         </div>
     </div>
 
-    <!-- Figma Calendar Popover -->
+                    <!-- Figma Design Calendar Popover Modal -->
     <div id="calendarDropdownMenu" 
-         class="hidden absolute top-[calc(100%+8px)] right-4 md:right-0 w-[340px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50">
+                         class="hidden absolute top-[calc(100%+8px)] right-4 md:right-0 w-[360px] sm:w-[380px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50">
         
-        <!-- Filter Tabs: Daily, Weekly, Monthly, Yearly, Custom -->
-        <div class="flex items-center justify-between gap-1 pb-3 border-b border-slate-100 text-[11px] font-semibold text-slate-600">
-            <button type="button" class="date-tab px-2 py-1 rounded-full bg-slate-100 text-black border border-slate-200" data-mode="daily">Daily</button>
-            <button type="button" class="date-tab px-2 py-1 rounded-full hover:bg-slate-100 transition-colors" data-mode="weekly">Weekly</button>
-            <button type="button" class="date-tab px-2 py-1 rounded-full hover:bg-slate-100 transition-colors" data-mode="monthly">Monthly</button>
-            <button type="button" class="date-tab px-2 py-1 rounded-full hover:bg-slate-100 transition-colors" data-mode="yearly">Yearly</button>
-            <button type="button" class="date-tab px-2 py-1 rounded-full hover:bg-slate-100 transition-colors" data-mode="custom">Custom</button>
+                        <!-- Top Mode Navigation Pill (Figma Exact) -->
+                        <div class="bg-slate-100 p-1 rounded-full flex items-center justify-between text-xs font-semibold text-slate-600 mb-3">
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all bg-white text-black font-bold shadow-sm" data-mode="daily">Daily</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="weekly">Weekly</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="monthly">Monthly</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="yearly">Yearly</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="custom">Custom</button>
         </div>
 
-        <!-- Calendar Month Header -->
-        <div class="flex items-center justify-between py-2 text-xs font-bold text-slate-800">
-            <button id="prevMonthBtn" class="p-1 hover:bg-slate-100 rounded-md">
+                        <!-- Calendar Header (Month/Year display and Previous/Next buttons) -->
+                        <div class="flex items-center justify-between px-2 py-1 mb-2">
+                            <button id="calPrevBtn" class="p-1 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors">
                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
             </button>
-            <span id="calendarMonthTitle" class="text-sm font-bold">October 2026</span>
-            <button id="nextMonthBtn" class="p-1 hover:bg-slate-100 rounded-md">
+                            <span id="calHeaderTitle" class="text-sm font-bold text-slate-900 select-none">October 2026</span>
+                            <button id="calNextBtn" class="p-1 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors">
                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
         </div>
 
-        <!-- Calendar Days Grid -->
-        <div class="grid grid-cols-7 gap-1 text-center text-xs mt-1">
-            <!-- Weekdays -->
-            <span class="text-slate-400 font-medium py-1">Mo</span>
-            <span class="text-slate-400 font-medium py-1">Tu</span>
-            <span class="text-slate-400 font-medium py-1">We</span>
-            <span class="text-slate-400 font-medium py-1">Th</span>
-            <span class="text-slate-400 font-medium py-1">Fr</span>
-            <span class="text-slate-400 font-medium py-1">Sa</span>
-            <span class="text-slate-400 font-medium py-1">Su</span>
+                        <!-- Container 1: Days View (for Daily, Weekly, Custom) -->
+                        <div id="daysViewContainer">
+                            <!-- Weekdays Header -->
+                            <div class="grid grid-cols-7 text-center text-xs text-slate-400 font-medium mb-1">
+                                <div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div><div>Su</div>
+                            </div>
+                            <!-- Days Grid Container -->
+                            <div id="calendarDaysGrid" class="grid grid-cols-7 text-center text-xs select-none">
+                                <!-- Dynamically generated cells -->
+                            </div>
+                        </div>
 
-            <!-- Days matching Figma mockup -->
-            <span class="text-slate-300 py-1.5">28</span>
-            <span class="text-slate-300 py-1.5">29</span>
-            <span class="text-slate-300 py-1.5">30</span>
-            <!-- Active Selected Day 1 -->
-            <span class="cal-day font-black text-black bg-[#BBE4FF] rounded-lg py-1.5 cursor-pointer">1</span>
-            <span class="cal-day font-bold text-slate-800 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">2</span>
-            <span class="cal-day font-bold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">3</span>
-            <span class="cal-day font-bold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">4</span>
-
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">5</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">6</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">7</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">8</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">9</span>
-            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">10</span>
-            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">11</span>
-
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">12</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">13</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">14</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">15</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">16</span>
-            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">17</span>
-            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">18</span>
-
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">19</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">20</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">21</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">22</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">23</span>
-            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">24</span>
-            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">25</span>
-
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">26</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">27</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">28</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">29</span>
-            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">30</span>
-            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">31</span>
-            <span class="text-slate-300 py-1.5">1</span>
+                        <!-- Container 2: Monthly Grid View -->
+                        <div id="monthsViewContainer" class="hidden">
+                            <div id="monthsGrid" class="grid grid-cols-3 gap-3 p-2 text-center text-sm font-medium text-slate-700 select-none">
+                                <!-- Dynamically populated 12 months -->
+                            </div>
         </div>
+
+                        <!-- Container 3: Yearly Grid View -->
+                        <div id="yearsViewContainer" class="hidden">
+                            <div id="yearsGrid" class="grid grid-cols-3 gap-3 p-2 text-center text-sm font-medium text-slate-700 select-none">
+                                <!-- Dynamically populated decade years -->
+                            </div>
+                        </div>
+
+                        <!-- Custom Date Picker Helper Hint -->
+                        <div id="customHint" class="hidden mt-3 pt-2 border-t border-slate-100 text-[11px] text-center text-slate-500 font-medium">
+                            Klik tanggal awal, lalu klik tanggal akhir untuk rentang kustom.
+                        </div>
+
     </div>
 </div>

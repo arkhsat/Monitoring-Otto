@@ -126,10 +126,9 @@
                         </div>
                     </div>
 
-                    <!-- Location Dropdown Menu (Figma Exact Styling) -->
+                    <!-- Location Dropdown Menu -->
                     <div id="locationDropdownMenu" 
                          class="hidden absolute top-[calc(100%+8px)] left-4 right-4 md:left-[110px] md:w-[380px] bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-50">
-                        <!-- Search input within dropdown -->
                         <div class="p-2 border-b border-slate-100">
                             <div class="flex items-center px-2 py-1 bg-slate-50 rounded-lg border border-slate-200">
                                 <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 mr-2"></i>
@@ -140,9 +139,7 @@
                             </div>
                         </div>
 
-                        <!-- Location List Options -->
                         <div class="max-h-64 overflow-y-auto divide-y divide-slate-100" id="locationList">
-                            <!-- Option 1: True Blue (Selected state matches Figma light blue) -->
                             <div class="location-item p-3 cursor-pointer bg-[#BBE4FF]/50 hover:bg-[#BBE4FF] transition-colors"
                                  data-name="True Blue" 
                                  data-address="Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330">
@@ -151,7 +148,6 @@
                                     Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330
                                 </div>
                             </div>
-                            <!-- Option 2: Gelael Tebet -->
                             <div class="location-item p-3 cursor-pointer hover:bg-slate-50 transition-colors"
                                  data-name="Gelael Tebet" 
                                  data-address="Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330">
@@ -160,7 +156,6 @@
                                     Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330
                                 </div>
                             </div>
-                            <!-- Option 3: Intermark BSD -->
                             <div class="location-item p-3 cursor-pointer hover:bg-slate-50 transition-colors"
                                  data-name="Intermark BSD" 
                                  data-address="Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330">
@@ -169,7 +164,6 @@
                                     Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330
                                 </div>
                             </div>
-                            <!-- Option 4: Ciracas Center -->
                             <div class="location-item p-3 cursor-pointer hover:bg-slate-50 transition-colors"
                                  data-name="Ciracas Center" 
                                  data-address="Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330">
@@ -182,7 +176,7 @@
                     </div>
                 </div>
 
-                <!-- 2. Date Filter Card with Modal/Dropdown (Daily, Weekly, Monthly, Yearly, Custom) -->
+                <!-- 2. Date Filter Card with Multi-Mode Interactive Calendar -->
                 <div class="relative bg-white rounded-xl shadow-sm p-4 flex items-center gap-3">
                     <div class="text-slate-600 shrink-0">
                         <i data-lucide="calendar-fold" class="w-6 h-6 text-[#0079C6]"></i>
@@ -199,83 +193,61 @@
                         </div>
                     </div>
 
-                    <!-- Figma Calendar Popover -->
+                    <!-- Figma Design Calendar Popover Modal -->
                     <div id="calendarDropdownMenu" 
-                         class="hidden absolute top-[calc(100%+8px)] right-4 md:right-0 w-[340px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50">
+                         class="hidden absolute top-[calc(100%+8px)] right-4 md:right-0 w-[360px] sm:w-[380px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50">
                         
-                        <!-- Filter Tabs: Daily, Weekly, Monthly, Yearly, Custom -->
-                        <div class="flex items-center justify-between gap-1 pb-3 border-b border-slate-100 text-[11px] font-semibold text-slate-600">
-                            <button type="button" class="date-tab px-2 py-1 rounded-full bg-slate-100 text-black border border-slate-200" data-mode="daily">Daily</button>
-                            <button type="button" class="date-tab px-2 py-1 rounded-full hover:bg-slate-100 transition-colors" data-mode="weekly">Weekly</button>
-                            <button type="button" class="date-tab px-2 py-1 rounded-full hover:bg-slate-100 transition-colors" data-mode="monthly">Monthly</button>
-                            <button type="button" class="date-tab px-2 py-1 rounded-full hover:bg-slate-100 transition-colors" data-mode="yearly">Yearly</button>
-                            <button type="button" class="date-tab px-2 py-1 rounded-full hover:bg-slate-100 transition-colors" data-mode="custom">Custom</button>
+                        <!-- Top Mode Navigation Pill (Figma Exact) -->
+                        <div class="bg-slate-100 p-1 rounded-full flex items-center justify-between text-xs font-semibold text-slate-600 mb-3">
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all bg-white text-black font-bold shadow-sm" data-mode="daily">Daily</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="weekly">Weekly</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="monthly">Monthly</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="yearly">Yearly</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="custom">Custom</button>
                         </div>
 
-                        <!-- Calendar Month Header -->
-                        <div class="flex items-center justify-between py-2 text-xs font-bold text-slate-800">
-                            <button id="prevMonthBtn" class="p-1 hover:bg-slate-100 rounded-md">
+                        <!-- Calendar Header (Month/Year display and Previous/Next buttons) -->
+                        <div class="flex items-center justify-between px-2 py-1 mb-2">
+                            <button id="calPrevBtn" class="p-1 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors">
                                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
                             </button>
-                            <span id="calendarMonthTitle" class="text-sm font-bold">October 2026</span>
-                            <button id="nextMonthBtn" class="p-1 hover:bg-slate-100 rounded-md">
+                            <span id="calHeaderTitle" class="text-sm font-bold text-slate-900 select-none">October 2026</span>
+                            <button id="calNextBtn" class="p-1 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors">
                                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
                             </button>
                         </div>
 
-                        <!-- Calendar Days Grid -->
-                        <div class="grid grid-cols-7 gap-1 text-center text-xs mt-1">
-                            <!-- Weekdays -->
-                            <span class="text-slate-400 font-medium py-1">Mo</span>
-                            <span class="text-slate-400 font-medium py-1">Tu</span>
-                            <span class="text-slate-400 font-medium py-1">We</span>
-                            <span class="text-slate-400 font-medium py-1">Th</span>
-                            <span class="text-slate-400 font-medium py-1">Fr</span>
-                            <span class="text-slate-400 font-medium py-1">Sa</span>
-                            <span class="text-slate-400 font-medium py-1">Su</span>
-
-                            <!-- Days matching Figma mockup -->
-                            <span class="text-slate-300 py-1.5">28</span>
-                            <span class="text-slate-300 py-1.5">29</span>
-                            <span class="text-slate-300 py-1.5">30</span>
-                            <!-- Active Selected Day 1 -->
-                            <span class="cal-day font-black text-black bg-[#BBE4FF] rounded-lg py-1.5 cursor-pointer">1</span>
-                            <span class="cal-day font-bold text-slate-800 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">2</span>
-                            <span class="cal-day font-bold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">3</span>
-                            <span class="cal-day font-bold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">4</span>
-
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">5</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">6</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">7</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">8</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">9</span>
-                            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">10</span>
-                            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">11</span>
-
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">12</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">13</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">14</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">15</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">16</span>
-                            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">17</span>
-                            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">18</span>
-
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">19</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">20</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">21</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">22</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">23</span>
-                            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">24</span>
-                            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">25</span>
-
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">26</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">27</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">28</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">29</span>
-                            <span class="cal-day text-slate-700 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">30</span>
-                            <span class="cal-day font-semibold text-red-500 hover:bg-slate-100 rounded-lg py-1.5 cursor-pointer">31</span>
-                            <span class="text-slate-300 py-1.5">1</span>
+                        <!-- Container 1: Days View (for Daily, Weekly, Custom) -->
+                        <div id="daysViewContainer">
+                            <!-- Weekdays Header -->
+                            <div class="grid grid-cols-7 text-center text-xs text-slate-400 font-medium mb-1">
+                                <div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div><div>Su</div>
+                            </div>
+                            <!-- Days Grid Container -->
+                            <div id="calendarDaysGrid" class="grid grid-cols-7 text-center text-xs select-none">
+                                <!-- Dynamically generated cells -->
+                            </div>
                         </div>
+
+                        <!-- Container 2: Monthly Grid View -->
+                        <div id="monthsViewContainer" class="hidden">
+                            <div id="monthsGrid" class="grid grid-cols-3 gap-3 p-2 text-center text-sm font-medium text-slate-700 select-none">
+                                <!-- Dynamically populated 12 months -->
+                            </div>
+                        </div>
+
+                        <!-- Container 3: Yearly Grid View -->
+                        <div id="yearsViewContainer" class="hidden">
+                            <div id="yearsGrid" class="grid grid-cols-3 gap-3 p-2 text-center text-sm font-medium text-slate-700 select-none">
+                                <!-- Dynamically populated decade years -->
+                            </div>
+                        </div>
+
+                        <!-- Custom Date Picker Helper Hint -->
+                        <div id="customHint" class="hidden mt-3 pt-2 border-t border-slate-100 text-[11px] text-center text-slate-500 font-medium">
+                            Klik tanggal awal, lalu klik tanggal akhir untuk rentang kustom.
+                        </div>
+
                     </div>
                 </div>
             </section>
@@ -298,7 +270,7 @@
                         </thead>
 
                         <!-- Table Body with Long List for Smooth Scroll Demo -->
-                        <tbody class="divide-y divide-slate-100 text-slate-800 text-sm md:text-base">
+                        <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-800 text-sm md:text-base">
                             <!-- Row 1 -->
                             <tr class="hover:bg-slate-50 transition-colors">
                                 <td class="py-4 px-4 font-normal">Kamis, 1 Oktober 2026</td>
@@ -466,7 +438,6 @@
             });
         });
 
-        // Location search filter
         locationSearchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
             locationItems.forEach(item => {
@@ -480,14 +451,73 @@
             });
         });
 
-        // 4. Calendar Popover & Filters Logic
+        // -------------------------------------------------------------
+        // 4. Enhanced Multi-Mode Calendar Engine (Figma Accurate)
+        // -------------------------------------------------------------
         const calendarDropdownBtn = document.getElementById('calendarDropdownBtn');
         const calendarDropdownMenu = document.getElementById('calendarDropdownMenu');
         const calendarChevron = document.getElementById('calendarChevron');
         const selectedDateText = document.getElementById('selectedDateText');
-        const dateTabs = document.querySelectorAll('.date-tab');
-        const calDays = document.querySelectorAll('.cal-day');
+        
+        const modeTabs = document.querySelectorAll('.mode-tab');
+        const calHeaderTitle = document.getElementById('calHeaderTitle');
+        const calPrevBtn = document.getElementById('calPrevBtn');
+        const calNextBtn = document.getElementById('calNextBtn');
+        
+        const daysViewContainer = document.getElementById('daysViewContainer');
+        const monthsViewContainer = document.getElementById('monthsViewContainer');
+        const yearsViewContainer = document.getElementById('yearsViewContainer');
+        const customHint = document.getElementById('customHint');
+        const calendarDaysGrid = document.getElementById('calendarDaysGrid');
+        const monthsGrid = document.getElementById('monthsGrid');
+        const yearsGrid = document.getElementById('yearsGrid');
 
+        let currentMode = 'daily';
+        let currentYear = 2026;
+        let currentMonth = 9; // October (0-indexed: 9 = October)
+        let decadeStartYear = 2020;
+
+        // Selection states
+        let selectedDay = new Date(2026, 9, 1);
+        let selectedWeekStart = new Date(2026, 8, 28); // 28 Sept 2026 (Mo)
+        let selectedWeekEnd = new Date(2026, 9, 4);   // 4 Oct 2026 (Su)
+        let selectedMonthIndex = 1; // Feb (from Figma mockup)
+        let selectedYear = 2021;    // 2021 (from Figma mockup)
+        let customRangeStart = new Date(2026, 9, 1);
+        let customRangeEnd = new Date(2026, 9, 23);
+        let customHoverDate = null;
+        let isSelectingCustom = false;
+
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const monthShortNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        // Helpers
+        function formatDate(d) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function isSameDay(d1, d2) {
+            return d1 && d2 &&
+                   d1.getFullYear() === d2.getFullYear() &&
+                   d1.getMonth() === d2.getMonth() &&
+                   d1.getDate() === d2.getDate();
+        }
+
+        function isBetween(d, start, end) {
+            if (!start || !end) return false;
+            const t = d.getTime();
+            const s = Math.min(start.getTime(), end.getTime());
+            const e = Math.max(start.getTime(), end.getTime());
+            return t >= s && t <= e;
+        }
+
+        // Toggle calendar dropdown open/close
         calendarDropdownBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             locationDropdownMenu.classList.add('hidden');
@@ -500,43 +530,333 @@
             } else {
                 calendarDropdownMenu.classList.remove('hidden');
                 calendarChevron.classList.add('rotate-180');
+                renderCurrentView();
             }
         });
 
-        // Date Tabs (Daily, Weekly, Monthly, Yearly, Custom)
-        dateTabs.forEach(tab => {
+        // Mode Tab Selection
+        modeTabs.forEach(tab => {
             tab.addEventListener('click', (e) => {
                 e.stopPropagation();
-                dateTabs.forEach(t => {
-                    t.classList.remove('bg-slate-100', 'text-black', 'border', 'border-slate-200');
-                    t.classList.add('hover:bg-slate-100');
+                modeTabs.forEach(t => {
+                    t.classList.remove('bg-white', 'text-black', 'font-bold', 'shadow-sm');
+                    t.classList.add('text-slate-600', 'hover:text-black');
                 });
-                tab.classList.add('bg-slate-100', 'text-black', 'border', 'border-slate-200');
-                tab.classList.remove('hover:bg-slate-100');
+                tab.classList.add('bg-white', 'text-black', 'font-bold', 'shadow-sm');
+                tab.classList.remove('text-slate-600', 'hover:text-black');
 
-                const mode = tab.getAttribute('data-mode');
-                if (mode === 'daily') selectedDateText.textContent = '01/10/2026';
-                if (mode === 'weekly') selectedDateText.textContent = '01/10/2026 - 07/10/2026';
-                if (mode === 'monthly') selectedDateText.textContent = 'Oktober 2026';
-                if (mode === 'yearly') selectedDateText.textContent = 'Tahun 2026';
-                if (mode === 'custom') selectedDateText.textContent = 'Pilih rentang tanggal';
+                currentMode = tab.getAttribute('data-mode');
+                renderCurrentView();
             });
         });
 
-        // Day Selection
-        calDays.forEach(day => {
-            day.addEventListener('click', (e) => {
-                e.stopPropagation();
-                calDays.forEach(d => {
-                    d.classList.remove('bg-[#BBE4FF]', 'font-black');
-                });
-                day.classList.add('bg-[#BBE4FF]', 'font-black');
-                const val = day.textContent.trim().padStart(2, '0');
-                selectedDateText.textContent = `${val}/10/2026`;
-                calendarDropdownMenu.classList.add('hidden');
-                calendarChevron.classList.remove('rotate-180');
-            });
+        // Previous / Next Header Navigation
+        calPrevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (currentMode === 'monthly') {
+                currentYear--;
+            } else if (currentMode === 'yearly') {
+                decadeStartYear -= 10;
+            } else {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+            }
+            renderCurrentView();
         });
+
+        calNextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (currentMode === 'monthly') {
+                currentYear++;
+            } else if (currentMode === 'yearly') {
+                decadeStartYear += 10;
+            } else {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+            }
+            renderCurrentView();
+        });
+
+        function renderCurrentView() {
+            daysViewContainer.classList.add('hidden');
+            monthsViewContainer.classList.add('hidden');
+            yearsViewContainer.classList.add('hidden');
+            customHint.classList.add('hidden');
+
+            if (currentMode === 'monthly') {
+                monthsViewContainer.classList.remove('hidden');
+                calHeaderTitle.textContent = `${currentYear}`;
+                renderMonthsGrid();
+            } else if (currentMode === 'yearly') {
+                yearsViewContainer.classList.remove('hidden');
+                calHeaderTitle.textContent = `${decadeStartYear} – ${decadeStartYear + 9}`;
+                renderYearsGrid();
+            } else {
+                daysViewContainer.classList.remove('hidden');
+                calHeaderTitle.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                if (currentMode === 'custom') {
+                    customHint.classList.remove('hidden');
+                }
+                renderDaysGrid();
+            }
+        }
+
+        // Render Days Grid (Daily, Weekly, Custom)
+        function renderDaysGrid() {
+            calendarDaysGrid.innerHTML = '';
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            // Monday is first day of week: (firstDay.getDay() + 6) % 7
+            const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const prevMonthDays = new Date(currentYear, currentMonth, 0).getDate();
+
+            // Total 35 or 42 cells (5 or 6 weeks)
+            const totalCells = (startingDayOfWeek + daysInMonth > 35) ? 42 : 35;
+
+            for (let i = 0; i < totalCells; i++) {
+                let cellDate;
+                let isCurrentMonth = true;
+
+                if (i < startingDayOfWeek) {
+                    const prevD = prevMonthDays - startingDayOfWeek + i + 1;
+                    cellDate = new Date(currentYear, currentMonth - 1, prevD);
+                    isCurrentMonth = false;
+                } else if (i >= startingDayOfWeek + daysInMonth) {
+                    const nextD = i - (startingDayOfWeek + daysInMonth) + 1;
+                    cellDate = new Date(currentYear, currentMonth + 1, nextD);
+                    isCurrentMonth = false;
+                } else {
+                    const d = i - startingDayOfWeek + 1;
+                    cellDate = new Date(currentYear, currentMonth, d);
+                }
+
+                const dayOfWeek = cellDate.getDay(); // 0 is Sunday, 6 is Saturday
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
+                const cellWrapper = document.createElement('div');
+                cellWrapper.className = 'py-0.5 relative flex items-center justify-center cursor-pointer';
+
+                const cellBtn = document.createElement('div');
+                cellBtn.className = 'w-8 h-8 rounded-full flex items-center justify-center transition-all z-10 text-xs font-medium';
+                cellBtn.textContent = cellDate.getDate();
+
+                // Style based on Current Mode
+                if (currentMode === 'daily') {
+                    if (!isCurrentMonth) {
+                        cellBtn.classList.add('text-slate-300');
+                    } else if (isWeekend) {
+                        cellBtn.classList.add('text-red-500');
+                    } else {
+                        cellBtn.classList.add('text-slate-800');
+                    }
+
+                    if (isSameDay(cellDate, selectedDay)) {
+                        // Figma exact: rounded circular light-gray background with black font
+                        cellBtn.className = 'w-8 h-8 rounded-full flex items-center justify-center z-10 text-xs font-bold bg-[#E5E7EB] text-black shadow-sm';
+                    } else {
+                        cellBtn.classList.add('hover:bg-slate-100');
+                    }
+
+                    cellWrapper.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectedDay = cellDate;
+                        selectedDateText.textContent = formatDate(cellDate);
+                        renderDaysGrid();
+                    });
+
+                } else if (currentMode === 'weekly') {
+                    const inWeekRange = isBetween(cellDate, selectedWeekStart, selectedWeekEnd);
+                    const isStart = isSameDay(cellDate, selectedWeekStart);
+                    const isEnd = isSameDay(cellDate, selectedWeekEnd);
+
+                    if (inWeekRange) {
+                        // Figma: continuous light gray banner, with bright blue endpoints
+                        const strip = document.createElement('div');
+                        strip.className = 'absolute inset-y-0.5 inset-x-0 bg-[#F3F4F6] z-0';
+                        if (isStart) strip.classList.add('rounded-l-full');
+                        if (isEnd) strip.classList.add('rounded-r-full');
+                        cellWrapper.appendChild(strip);
+
+                        if (isStart || isEnd) {
+                            cellBtn.className = 'w-8 h-8 rounded-full flex items-center justify-center z-10 text-xs font-bold bg-[#0079C6] text-white shadow-sm';
+                        } else {
+                            cellBtn.className = 'w-8 h-8 flex items-center justify-center z-10 text-xs text-slate-800 font-medium';
+                        }
+                    } else {
+                        if (!isCurrentMonth) {
+                            cellBtn.classList.add('text-slate-300');
+                        } else if (isWeekend) {
+                            cellBtn.classList.add('text-red-500');
+                        } else {
+                            cellBtn.classList.add('text-slate-800');
+                        }
+                        cellBtn.classList.add('hover:bg-slate-100');
+                    }
+
+                    // Selecting any day selects that whole 7-day span
+                    cellWrapper.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Find Monday of the chosen week
+                        const dayOffset = (cellDate.getDay() + 6) % 7;
+                        selectedWeekStart = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate() - dayOffset);
+                        selectedWeekEnd = new Date(selectedWeekStart.getFullYear(), selectedWeekStart.getMonth(), selectedWeekStart.getDate() + 6);
+                        selectedDateText.textContent = `${formatDate(selectedWeekStart)} - ${formatDate(selectedWeekEnd)}`;
+                        renderDaysGrid();
+                    });
+
+                } else if (currentMode === 'custom') {
+                    cellWrapper.setAttribute('data-timestamp', cellDate.getTime());
+                    cellWrapper.setAttribute('data-weekend', isWeekend);
+                    cellWrapper.setAttribute('data-current-month', isCurrentMonth);
+                    cellBtn.setAttribute('data-day-number', cellDate.getDate());
+
+                    // Click event: 1st click pins start; 2nd click pins end; subsequent click starts new range
+                    cellWrapper.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (!isSelectingCustom) {
+                            // 1st click: Pin start date
+                            customRangeStart = cellDate;
+                            customRangeEnd = null;
+                            customHoverDate = cellDate;
+                            isSelectingCustom = true;
+                            selectedDateText.textContent = `${formatDate(customRangeStart)} - ...`;
+                            updateCustomHighlightDOM();
+                        } else {
+                            // 2nd click: Pin end date and complete selection
+                            isSelectingCustom = false;
+                            if (cellDate.getTime() < customRangeStart.getTime()) {
+                                customRangeEnd = customRangeStart;
+                                customRangeStart = cellDate;
+                            } else {
+                                customRangeEnd = cellDate;
+                            }
+                            customHoverDate = null;
+                            selectedDateText.textContent = `${formatDate(customRangeStart)} - ${formatDate(customRangeEnd)}`;
+                            updateCustomHighlightDOM();
+                        }
+                    });
+
+                    // Mouseenter event: only update styles of existing DOM elements without re-rendering the grid
+                    cellWrapper.addEventListener('mouseenter', () => {
+                        if (isSelectingCustom) {
+                            customHoverDate = cellDate;
+                            updateCustomHighlightDOM();
+                        }
+                    });
+                }
+
+                cellWrapper.appendChild(cellBtn);
+                calendarDaysGrid.appendChild(cellWrapper);
+            }
+
+            if (currentMode === 'custom') {
+                updateCustomHighlightDOM();
+            }
+        }
+
+        // Live styling helper for Custom Mode (never replaces DOM or removes click listeners)
+        function updateCustomHighlightDOM() {
+            const effectiveEnd = isSelectingCustom ? (customHoverDate || customRangeStart) : customRangeEnd;
+            const cells = calendarDaysGrid.querySelectorAll('[data-timestamp]');
+
+            cells.forEach(wrapper => {
+                const ts = parseInt(wrapper.getAttribute('data-timestamp'));
+                const cellDate = new Date(ts);
+                const isWeekend = wrapper.getAttribute('data-weekend') === 'true';
+                const isCurrentMonth = wrapper.getAttribute('data-current-month') === 'true';
+                const btn = wrapper.querySelector('div[data-day-number]');
+
+                // Remove existing strip if any
+                const existingStrip = wrapper.querySelector('.custom-range-strip');
+                if (existingStrip) existingStrip.remove();
+
+                const inRange = isBetween(cellDate, customRangeStart, effectiveEnd);
+                const isStart = isSameDay(cellDate, customRangeStart);
+                const isEnd = isSameDay(cellDate, effectiveEnd);
+
+                if (inRange) {
+                    const strip = document.createElement('div');
+                    strip.className = 'custom-range-strip absolute inset-y-0.5 inset-x-0 bg-[#E0F2FE] z-0 pointer-events-none';
+                    if (isStart) strip.classList.add('rounded-l-full');
+                    if (isEnd) strip.classList.add('rounded-r-full');
+                    wrapper.insertBefore(strip, btn);
+
+                    if (isStart || isEnd) {
+                        btn.className = 'w-8 h-8 rounded-full flex items-center justify-center z-10 text-xs font-bold bg-[#0079C6] text-white shadow-sm pointer-events-none';
+                    } else {
+                        btn.className = 'w-8 h-8 flex items-center justify-center z-10 text-xs font-medium pointer-events-none ' + (isWeekend ? 'text-red-500' : 'text-slate-800');
+                    }
+                } else {
+                    btn.className = 'w-8 h-8 rounded-full flex items-center justify-center z-10 text-xs font-medium hover:bg-slate-100 pointer-events-none';
+                    if (!isCurrentMonth) {
+                        btn.classList.add('text-slate-300');
+                    } else if (isWeekend) {
+                        btn.classList.add('text-red-500');
+                    } else {
+                        btn.classList.add('text-slate-800');
+                    }
+                }
+            });
+        }
+
+        // Render Months Grid (Monthly Mode)
+        function renderMonthsGrid() {
+            monthsGrid.innerHTML = '';
+            monthShortNames.forEach((name, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'py-3 px-2 rounded-xl cursor-pointer transition-colors';
+                btn.textContent = name;
+
+                if (idx === selectedMonthIndex) {
+                    // Figma exact: light grey rounded box
+                    btn.classList.add('bg-[#F3F4F6]', 'text-black', 'font-bold');
+                } else {
+                    btn.classList.add('hover:bg-slate-100', 'text-slate-700');
+                }
+
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectedMonthIndex = idx;
+                    currentMonth = idx;
+                    selectedDateText.textContent = `${monthNames[idx]} ${currentYear}`;
+                    renderMonthsGrid();
+                });
+                monthsGrid.appendChild(btn);
+            });
+        }
+
+        // Render Years Grid (Yearly Mode)
+        function renderYearsGrid() {
+            yearsGrid.innerHTML = '';
+            for (let y = decadeStartYear; y <= decadeStartYear + 9; y++) {
+                const btn = document.createElement('div');
+                btn.className = 'py-3 px-2 rounded-xl cursor-pointer transition-colors';
+                btn.textContent = y;
+
+                if (y === selectedYear) {
+                    // Figma exact: light grey rounded box
+                    btn.classList.add('bg-[#F3F4F6]', 'text-black', 'font-bold');
+                } else {
+                    btn.classList.add('hover:bg-slate-100', 'text-slate-700');
+                }
+
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectedYear = y;
+                    currentYear = y;
+                    selectedDateText.textContent = `Tahun ${y}`;
+                    renderYearsGrid();
+                });
+                yearsGrid.appendChild(btn);
+            }
+        }
 
         // Close dropdowns on outside click
         document.addEventListener('click', (e) => {
@@ -549,6 +869,9 @@
                 calendarChevron.classList.remove('rotate-180');
             }
         });
+
+        // Initial render
+        renderCurrentView();
     </script>
 </body>
 </html>
