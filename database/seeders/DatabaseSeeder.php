@@ -15,11 +15,38 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Admin / Otto user
+        User::updateOrCreate(
+            ['username' => 'otto'],
+            [
+                'name' => 'Otto Parking',
+                'email' => 'otto@otto.com',
+                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'role' => 'Admin',
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::updateOrCreate(
+            ['username' => 'admin'],
+            [
+                'name' => 'Administrator',
+                'email' => 'admin@otto.com',
+                'password' => \Illuminate\Support\Facades\Hash::make('admin123'),
+                'role' => 'Admin',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['username' => 'operator'],
+            [
+                'name' => 'Operator Lokasi',
+                'email' => 'operator@otto.com',
+                'password' => \Illuminate\Support\Facades\Hash::make('operator123'),
+                'role' => 'Operator',
+            ]
+        );
+
+        // Seed monitoring data
+        $this->call(MonitoringDataSeeder::class);
     }
 }
