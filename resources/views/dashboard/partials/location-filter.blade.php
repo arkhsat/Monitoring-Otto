@@ -6,10 +6,11 @@
     <div class="flex-1 flex items-center gap-2">
         <span class="font-bold text-black text-sm md:text-base whitespace-nowrap">Pilih lokasi:</span>
         <div id="locationDropdownBtn" 
+             data-current-kode="{{ $selectedKode ?? 1 }}"
              class="flex-1 relative flex items-center justify-between border border-[#0079C6] rounded-lg px-3 py-2 cursor-pointer hover:border-[#005f9e] transition-all bg-white select-none">
             <div class="flex items-center gap-2 overflow-hidden">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <span id="selectedLocationText" class="text-sm text-slate-700 truncate">True Blue</span>
+                <span id="selectedLocationText" class="text-sm text-slate-700 truncate">{{ $selectedLocation['name'] ?? 'True Blue' }}</span>
             </div>
             <i data-lucide="chevron-down" id="locationChevron" class="w-4 h-4 text-slate-400 shrink-0 ml-1 transition-transform"></i>
         </div>

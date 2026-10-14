@@ -8,13 +8,8 @@
     {{-- Google Fonts --}}
     @include('partials.fonts')
 
-    {{-- Lucide Icons & Tailwind CSS --}}
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    @if (file_exists(public_path('build/manifest.json')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
+    {{-- CDN Dependencies (Tailwind, Lucide, Vite) --}}
+    @include('partials.cdn')
 
     {{-- Custom Styles --}}
     @include('partials.styles')

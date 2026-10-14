@@ -19,4 +19,12 @@
     .figma-scrollbar::-webkit-scrollbar-thumb:hover {
         background: #005f9e;
     }
+
+    /* Login Page Background */
+    .bg-login-otto {
+        background-image: url('{{ asset('images/bg-login.png') }}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
 </style>

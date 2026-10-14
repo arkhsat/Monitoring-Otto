@@ -17,34 +17,34 @@
 
             <!-- Table Body -->
             <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-800 text-sm md:text-base">
-                @php
-                    $records = $records ?? [
-                        ['date' => 'Kamis, 1 Oktober 2026', 'admin' => '900.000', 'mdd' => '960.000', 'report' => '900.000', 'status' => 'Tidak Cocok'],
-                        ['date' => 'Jumat, 2 Oktober 2026', 'admin' => '900.000', 'mdd' => '900.000', 'report' => '900.000', 'status' => 'Cocok'],
-                        ['date' => 'Sabtu, 3 Oktober 2026', 'admin' => '900.000', 'mdd' => '900.000', 'report' => '900.000', 'status' => 'Cocok'],
-                        ['date' => 'Minggu, 4 Oktober 2026', 'admin' => '900.000', 'mdd' => '960.000', 'report' => '900.000', 'status' => 'Tidak Cocok'],
-                        ['date' => 'Senin, 5 Oktober 2026', 'admin' => '900.000', 'mdd' => '900.000', 'report' => '900.000', 'status' => 'Cocok'],
-                        ['date' => 'Selasa, 6 Oktober 2026', 'admin' => '900.000', 'mdd' => '900.000', 'report' => '900.000', 'status' => 'Cocok'],
-                        ['date' => 'Rabu, 7 Oktober 2026', 'admin' => '900.000', 'mdd' => '960.000', 'report' => '900.000', 'status' => 'Tidak Cocok'],
-                        ['date' => 'Kamis, 8 Oktober 2026', 'admin' => '900.000', 'mdd' => '900.000', 'report' => '900.000', 'status' => 'Cocok'],
-                        ['date' => 'Jumat, 9 Oktober 2026', 'admin' => '920.000', 'mdd' => '920.000', 'report' => '920.000', 'status' => 'Cocok'],
-                        ['date' => 'Sabtu, 10 Oktober 2026', 'admin' => '950.000', 'mdd' => '980.000', 'report' => '950.000', 'status' => 'Tidak Cocok'],
-                        ['date' => 'Minggu, 11 Oktober 2026', 'admin' => '950.000', 'mdd' => '950.000', 'report' => '950.000', 'status' => 'Cocok'],
-                        ['date' => 'Senin, 12 Oktober 2026', 'admin' => '910.000', 'mdd' => '910.000', 'report' => '910.000', 'status' => 'Cocok'],
-                    ];
-                @endphp
-
-                @foreach ($records as $row)
+                @forelse ($records ?? [] as $row)
+                    @php
+                        $date = $row['date'] ?? '-';
+                        $admin = $row['admin'] ?? '-';
+                        $mdd = $row['mdd'] ?? '-';
+                        $report = $row['report'] ?? '-';
+                        $status = $row['status'] ?? 'Cocok';
+                        $isNotMatch = ($status === 'Tidak Cocok');
+                    @endphp
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="py-4 px-4 font-normal">{{ $row['date'] }}</td>
-                        <td class="py-4 px-4 font-normal">{{ $row['admin'] }}</td>
-                        <td class="py-4 px-4 font-normal">{{ $row['mdd'] }}</td>
-                        <td class="py-4 px-4 font-normal">{{ $row['report'] }}</td>
-                        <td class="py-4 px-4 font-bold {{ $row['status'] === 'Tidak Cocok' ? 'text-[#FF0000]' : 'text-slate-900' }}">
-                            {{ $row['status'] }}
+                        <td class="py-4 px-4 font-normal">{{ $date }}</td>
+                        <td class="py-4 px-4 font-normal">{{ $admin }}</td>
+                        <td class="py-4 px-4 font-normal">{{ $mdd }}</td>
+                        <td class="py-4 px-4 font-normal">{{ $report }}</td>
+                        <td class="py-4 px-4 font-bold {{ $isNotMatch ? 'text-[#FF0000]' : 'text-slate-900' }}">
+                            {{ $status }}
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="5" class="py-12 text-center text-slate-400 font-medium">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <i data-lucide="inbox" class="w-8 h-8 text-slate-300"></i>
+                                <span>Tidak ada data transaksi untuk lokasi ini.</span>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

@@ -49,15 +49,104 @@
         }
     });
 
+    let activeLocationKode = locationDropdownBtn ? (locationDropdownBtn.getAttribute('data-current-kode') || 1) : 1;
+
+    function fetchTableData(kode) {
+        const tableBody = document.getElementById('tableBody');
+        if (!tableBody) return;
+
+        // Visual loading indicator
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="py-12 text-center text-slate-500 font-medium">
+                    <div class="inline-flex items-center gap-2">
+                        <svg class="animate-spin h-5 w-5 text-[#0079C6]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        <span>Memuat data dari database...</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        fetch(`{{ route('dashboard.data') }}?kode=${encodeURIComponent(kode)}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.records || data.records.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-12 text-center text-slate-400 font-medium">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <i data-lucide="inbox" class="w-8 h-8 text-slate-300"></i>
+                                <span>Tidak ada data transaksi untuk lokasi ini.</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                return;
+            }
+
+            tableBody.innerHTML = data.records.map(row => {
+                const statusColor = (row.status === 'Tidak Cocok') ? 'text-[#FF0000]' : 'text-slate-900';
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="py-4 px-4 font-normal">${row.date}</td>
+                        <td class="py-4 px-4 font-normal">${row.admin}</td>
+                        <td class="py-4 px-4 font-normal">${row.mdd}</td>
+                        <td class="py-4 px-4 font-normal">${row.report}</td>
+                        <td class="py-4 px-4 font-bold ${statusColor}">
+                            ${row.status}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        })
+        .catch(err => {
+            console.error('Error fetching location data:', err);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="py-8 text-center text-rose-500 font-medium">
+                        Gagal memuat data dari database. Silakan coba lagi.
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
     locationItems.forEach(item => {
         item.addEventListener('click', () => {
             locationItems.forEach(i => {
                 i.classList.remove('bg-[#BBE4FF]/50', 'bg-[#BBE4FF]');
             });
             item.classList.add('bg-[#BBE4FF]/50');
-            selectedLocationText.textContent = item.getAttribute('data-name');
+            const locName = item.getAttribute('data-name');
+            const locKode = item.getAttribute('data-kode') || item.getAttribute('data-id') || 1;
+            
+            selectedLocationText.textContent = locName;
             locationDropdownMenu.classList.add('hidden');
             locationChevron.classList.remove('rotate-180');
+
+            activeLocationKode = locKode;
+            if (locationDropdownBtn) {
+                locationDropdownBtn.setAttribute('data-current-kode', locKode);
+            }
+
+            // Keep URL query param synced
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('kode', locKode);
+            window.history.replaceState({}, '', currentUrl);
+
+            // Fetch table data from database for selected location
+            fetchTableData(locKode);
         });
     });
 
