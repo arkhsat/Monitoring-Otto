@@ -1,28 +1,22 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
+use App\Http\Controllers\AuthController;
 
-Route::get('/', function () {
-    return view('auth.login');
-})->name('login');
+use App\Http\Controllers\DashboardController;
 
-Route::get('/login', function () {
-    return view('auth.login');
+// Guest Authentication Routes
+Route::middleware('guest')->group(function () {
+    Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::get('/login', [AuthController::class, 'showLoginForm']);
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 });
 
-Route::post('/login', function (Request $request) {
-    $request->validate([
-        'username' => ['required'],
-        'password' => ['required'],
-    ]);
+// Logout Route (supports both POST and GET for seamless UX)
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // For now redirect directly to main dashboard
-    return redirect()->route('dashboard.main');
-})->name('login.post');
-
-Route::get('/main', function () {
-    return view('dashboard.main');
-})->name('dashboard.main');
-
-
+// Authenticated Routes
+Route::middleware('auth')->group(function () {
+    Route::get('/main', [DashboardController::class, 'index'])->name('dashboard.main');
+    Route::get('/dashboard/data', [DashboardController::class, 'getData'])->name('dashboard.data');
+});
