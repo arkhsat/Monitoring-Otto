@@ -46,6 +46,9 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Seed locations
+        $this->call(LokasiSeeder::class);
+
         // Seed monitoring data
         $this->call(MonitoringDataSeeder::class);
     }
