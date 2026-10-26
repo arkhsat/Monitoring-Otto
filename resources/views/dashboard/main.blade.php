@@ -37,6 +37,9 @@
         </main>
     </div>
 
+    {{-- Settlement & Confirmation Modals --}}
+    @include('dashboard.partials.settlement-modal')
+
     {{-- Interactive JavaScript --}}
     @include('dashboard.partials.scripts')
 

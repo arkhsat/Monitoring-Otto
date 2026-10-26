@@ -67,13 +67,31 @@
 
             <!-- Navigation Links -->
             <nav class="mt-6 flex flex-col gap-2">
-                <a href="#" 
-                   class="flex items-center gap-3 px-3 py-3 bg-[#0079C6] text-white rounded-lg font-bold text-lg shadow-sm transition-all"
+                <a href="preview-main.html" 
+                   class="flex items-center gap-3 px-3 py-3 bg-[#0079C6] text-white rounded-lg font-bold text-base md:text-lg shadow-sm transition-all"
                    title="Main Monitoring">
                     <div class="w-6 h-6 flex items-center justify-center shrink-0">
                         <i data-lucide="monitor" class="w-6 h-6"></i>
                     </div>
-                    <span id="navLabelMain" class="transition-opacity duration-200 whitespace-nowrap">Main</span>
+                    <span class="nav-label transition-opacity duration-200 whitespace-nowrap">Main</span>
+                </a>
+
+                <a href="preview-online.html" 
+                   class="flex items-center gap-3 px-3 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg font-bold text-base md:text-lg transition-all"
+                   title="Online Monitoring">
+                    <div class="w-6 h-6 flex items-center justify-center shrink-0">
+                        <i data-lucide="activity" class="w-6 h-6"></i>
+                    </div>
+                    <span class="nav-label transition-opacity duration-200 whitespace-nowrap">Online Monitoring</span>
+                </a>
+
+                <a href="preview-lokasi.html" 
+                   class="flex items-center gap-3 px-3 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg font-bold text-base md:text-lg transition-all"
+                   title="Manajemen Lokasi">
+                    <div class="w-6 h-6 flex items-center justify-center shrink-0">
+                        <i data-lucide="map-pin" class="w-6 h-6"></i>
+                    </div>
+                    <span class="nav-label transition-opacity duration-200 whitespace-nowrap">Lokasi</span>
                 </a>
             </nav>
         </aside>
@@ -172,6 +190,14 @@
                                     Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330
                                 </div>
                             </div>
+                            <div class="location-item p-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                                 data-name="Lokasi baru" 
+                                 data-address="Keterangan lokasi baru">
+                                <div class="font-bold text-black text-sm">Lokasi baru</div>
+                                <div class="text-[11px] text-slate-500 leading-tight mt-0.5">
+                                    Keterangan lokasi baru
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -265,7 +291,8 @@
                                 <th class="py-3 px-4 text-center">Admin Otto</th>
                                 <th class="py-3 px-4 text-center">Settlement MDD</th>
                                 <th class="py-3 px-4 text-center">Report Lokasi</th>
-                                <th class="py-3 px-4 text-center">Kode</th>
+                                <th class="py-3 px-4 text-center">Keterangan</th>
+                                <th class="py-3 px-4 text-center">Send settlement MDD</th>
                             </tr>
                         </thead>
 
@@ -273,99 +300,135 @@
                         <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-800 text-sm md:text-base">
                             <!-- Row 1 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Kamis, 1 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">960.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">01/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">960.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
                                 <td class="py-4 px-4 font-bold text-[#FF0000]">Tidak Cocok</td>
+                                <td class="py-4 px-4">
+                                    <button type="button" 
+                                            onclick="openSettlementModal({date: '01/10/2026', admin: '900.000', mdd: '960.000', report: '900.000'})"
+                                            class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                                        Send
+                                    </button>
+                                </td>
                             </tr>
                             <!-- Row 2 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Jumat, 2 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-bold text-slate-900">Cocok</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">02/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
                             </tr>
                             <!-- Row 3 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Sabtu, 3 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-bold text-slate-900">Cocok</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">03/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
                             </tr>
                             <!-- Row 4 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Minggu, 4 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">960.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">04/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">960.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
                                 <td class="py-4 px-4 font-bold text-[#FF0000]">Tidak Cocok</td>
+                                <td class="py-4 px-4">
+                                    <button type="button" 
+                                            onclick="openSettlementModal({date: '04/10/2026', admin: '900.000', mdd: '960.000', report: '900.000'})"
+                                            class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                                        Send
+                                    </button>
+                                </td>
                             </tr>
                             <!-- Row 5 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Senin, 5 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-bold text-slate-900">Cocok</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">05/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
                             </tr>
                             <!-- Row 6 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Selasa, 6 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-bold text-slate-900">Cocok</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">06/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
                             </tr>
                             <!-- Row 7 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Rabu, 7 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">960.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">07/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">960.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
                                 <td class="py-4 px-4 font-bold text-[#FF0000]">Tidak Cocok</td>
+                                <td class="py-4 px-4">
+                                    <button type="button" 
+                                            onclick="openSettlementModal({date: '07/10/2026', admin: '900.000', mdd: '960.000', report: '900.000'})"
+                                            class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                                        Send
+                                    </button>
+                                </td>
                             </tr>
                             <!-- Row 8 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Kamis, 8 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-normal">900.000</td>
-                                <td class="py-4 px-4 font-bold text-slate-900">Cocok</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">08/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
                             </tr>
                             <!-- Row 9 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Jumat, 9 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">920.000</td>
-                                <td class="py-4 px-4 font-normal">920.000</td>
-                                <td class="py-4 px-4 font-normal">920.000</td>
-                                <td class="py-4 px-4 font-bold text-slate-900">Cocok</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">09/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">920.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">920.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">920.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
                             </tr>
                             <!-- Row 10 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Sabtu, 10 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">950.000</td>
-                                <td class="py-4 px-4 font-normal">980.000</td>
-                                <td class="py-4 px-4 font-normal">950.000</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">10/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">950.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">980.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">950.000</td>
                                 <td class="py-4 px-4 font-bold text-[#FF0000]">Tidak Cocok</td>
+                                <td class="py-4 px-4">
+                                    <button type="button" 
+                                            onclick="openSettlementModal({date: '10/10/2026', admin: '950.000', mdd: '980.000', report: '950.000'})"
+                                            class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                                        Send
+                                    </button>
+                                </td>
                             </tr>
                             <!-- Row 11 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Minggu, 11 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">950.000</td>
-                                <td class="py-4 px-4 font-normal">950.000</td>
-                                <td class="py-4 px-4 font-normal">950.000</td>
-                                <td class="py-4 px-4 font-bold text-slate-900">Cocok</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">11/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">950.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">950.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">950.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
                             </tr>
                             <!-- Row 12 -->
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-4 px-4 font-normal">Senin, 12 Oktober 2026</td>
-                                <td class="py-4 px-4 font-normal">910.000</td>
-                                <td class="py-4 px-4 font-normal">910.000</td>
-                                <td class="py-4 px-4 font-normal">910.000</td>
-                                <td class="py-4 px-4 font-bold text-slate-900">Cocok</td>
+                                <td class="py-4 px-4 font-normal text-slate-800">12/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">910.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">910.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">910.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -373,6 +436,119 @@
             </section>
         </main>
 
+    </div>
+
+    <!-- Settlement Popup Modal -->
+    <div id="settlementModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <!-- Dark Backdrop -->
+        <div id="settlementBackdrop" class="fixed inset-0 bg-black/60 transition-opacity backdrop-blur-[1px]"></div>
+
+        <!-- Modal Dialog Window -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl z-10 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+                <h3 class="text-lg md:text-xl font-bold text-slate-900">Settlement MDD</h3>
+                <button type="button" onclick="closeSettlementModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Body / Content -->
+            <div class="p-6 overflow-y-auto space-y-5">
+                <!-- Details Summary Box -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                    <div>
+                        <span class="text-xs text-slate-500 block">Tanggal</span>
+                        <span id="settlementModalDate" class="font-bold text-slate-800">-</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-500 block">Admin Otto</span>
+                        <span id="settlementModalAdmin" class="font-bold text-slate-800">Rp 900.000</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-500 block">Settlement MDD</span>
+                        <span id="settlementModalMdd" class="font-bold text-rose-600">Rp 960.000</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-500 block">Report Lokasi</span>
+                        <span id="settlementModalReport" class="font-bold text-slate-800">Rp 900.000</span>
+                    </div>
+                </div>
+
+                <!-- Settlement Preview / Information -->
+                <div class="border border-slate-200 rounded-xl p-4 bg-white">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                        <span class="text-sm font-semibold text-slate-800">Rincian Perbedaan Selisih</span>
+                        <span class="text-xs font-bold text-[#FF0000] bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">Tidak Cocok</span>
+                    </div>
+                    <div class="space-y-2 text-sm text-slate-600">
+                        <div class="flex justify-between">
+                            <span>Total Transaksi Tercatat:</span>
+                            <span class="font-medium text-slate-800">Rp 960.000</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Selisih dengan Admin Otto:</span>
+                            <span class="font-bold text-rose-600">+ Rp 60.000</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Status Rekonsiliasi:</span>
+                            <span class="font-medium text-amber-600">Menunggu Verifikasi Settlement</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Actions (PDF & Send Settlement) -->
+            <div class="flex items-center justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-200">
+                <button type="button" 
+                        id="btnSettlementPdf" 
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold text-sm rounded-lg shadow-sm transition-all">
+                    <i data-lucide="file-text" class="w-4 h-4 text-rose-500"></i>
+                    <span>PDF</span>
+                </button>
+                <button type="button" 
+                        id="btnOpenConfirmModal" 
+                        onclick="openConfirmModal()"
+                        class="inline-flex items-center gap-2 px-5 py-2 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white font-semibold text-sm rounded-lg shadow-sm transition-all">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    <span>Send Settlement</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Popup Modal -->
+    <div id="confirmModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <!-- Dark Backdrop for confirmation -->
+        <div id="confirmBackdrop" class="fixed inset-0 bg-black/60 transition-opacity backdrop-blur-[1px]"></div>
+
+        <!-- Confirmation Dialog Window -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden flex flex-col p-6 animate-in fade-in zoom-in-95 duration-150">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-14 h-14 rounded-full bg-blue-50 text-[#0079C6] flex items-center justify-center mb-4">
+                    <i data-lucide="help-circle" class="w-8 h-8"></i>
+                </div>
+                <h4 class="text-xl font-bold text-slate-900 mb-2">Kirim Settlement MDD?</h4>
+                <p class="text-sm text-slate-600 mb-6">
+                    Apakah Anda yakin ingin mengirim data settlement ini untuk diproses lebih lanjut?
+                </p>
+            </div>
+
+            <!-- Buttons: Batal & Kirim Settlement -->
+            <div class="grid grid-cols-2 gap-3 w-full">
+                <button type="button" 
+                        onclick="closeConfirmModal()" 
+                        class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-lg transition-colors">
+                    Batal
+                </button>
+                <button type="button" 
+                        id="btnKirimSettlementAction"
+                        onclick="handleKirimSettlement()" 
+                        class="w-full py-2.5 px-4 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white font-semibold text-sm rounded-lg shadow-sm transition-all">
+                    Kirim Settlement
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Interactive JavaScript -->
@@ -384,7 +560,7 @@
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebarFullLogo = document.getElementById('sidebarFullLogo');
-        const navLabelMain = document.getElementById('navLabelMain');
+        const navLabels = document.querySelectorAll('.nav-label');
 
         let isExpanded = true;
         sidebarToggle.addEventListener('click', () => {
@@ -393,12 +569,12 @@
                 sidebar.classList.remove('md:w-20');
                 sidebar.classList.add('md:w-60');
                 sidebarFullLogo.classList.remove('hidden');
-                navLabelMain.classList.remove('hidden');
+                navLabels.forEach(lbl => lbl.classList.remove('hidden'));
             } else {
                 sidebar.classList.remove('md:w-60');
                 sidebar.classList.add('md:w-20');
                 sidebarFullLogo.classList.add('hidden');
-                navLabelMain.classList.add('hidden');
+                navLabels.forEach(lbl => lbl.classList.add('hidden'));
             }
         });
 
@@ -872,6 +1048,69 @@
 
         // Initial render
         renderCurrentView();
+
+        // -------------------------------------------------------------
+        // Settlement & Confirmation Popup Modal Handlers
+        // -------------------------------------------------------------
+        const settlementModal = document.getElementById('settlementModal');
+        const settlementBackdrop = document.getElementById('settlementBackdrop');
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmBackdrop = document.getElementById('confirmBackdrop');
+
+        const settlementModalDate = document.getElementById('settlementModalDate');
+        const settlementModalAdmin = document.getElementById('settlementModalAdmin');
+        const settlementModalMdd = document.getElementById('settlementModalMdd');
+        const settlementModalReport = document.getElementById('settlementModalReport');
+
+        window.openSettlementModal = function(data) {
+            if (settlementModalDate && data.date) settlementModalDate.textContent = data.date;
+            if (settlementModalAdmin && data.admin) settlementModalAdmin.textContent = 'Rp ' + data.admin;
+            if (settlementModalMdd && data.mdd) settlementModalMdd.textContent = 'Rp ' + data.mdd;
+            if (settlementModalReport && data.report) settlementModalReport.textContent = 'Rp ' + data.report;
+
+            if (settlementModal) {
+                settlementModal.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        };
+
+        window.closeSettlementModal = function() {
+            if (settlementModal) {
+                settlementModal.classList.add('hidden');
+            }
+        };
+
+        window.openConfirmModal = function() {
+            if (confirmModal) {
+                confirmModal.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        };
+
+        window.closeConfirmModal = function() {
+            if (confirmModal) {
+                confirmModal.classList.add('hidden');
+            }
+        };
+
+        window.handleKirimSettlement = function() {
+            // UI hardcode: close confirmation & settlement modal
+            closeConfirmModal();
+            closeSettlementModal();
+        };
+
+        // Close when clicking the dark background overlay
+        if (settlementBackdrop) {
+            settlementBackdrop.addEventListener('click', () => {
+                closeSettlementModal();
+            });
+        }
+
+        if (confirmBackdrop) {
+            confirmBackdrop.addEventListener('click', () => {
+                closeConfirmModal();
+            });
+        }
     </script>
 </body>
 </html>

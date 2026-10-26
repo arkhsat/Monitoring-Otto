@@ -7,7 +7,7 @@
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarFullLogo = document.getElementById('sidebarFullLogo');
-    const navLabelMain = document.getElementById('navLabelMain');
+    const navLabels = document.querySelectorAll('.nav-label');
 
     let isExpanded = true;
     sidebarToggle.addEventListener('click', () => {
@@ -16,12 +16,12 @@
             sidebar.classList.remove('md:w-20');
             sidebar.classList.add('md:w-60');
             sidebarFullLogo.classList.remove('hidden');
-            navLabelMain.classList.remove('hidden');
+            navLabels.forEach(lbl => lbl.classList.remove('hidden'));
         } else {
             sidebar.classList.remove('md:w-60');
             sidebar.classList.add('md:w-20');
             sidebarFullLogo.classList.add('hidden');
-            navLabelMain.classList.add('hidden');
+            navLabels.forEach(lbl => lbl.classList.add('hidden'));
         }
     });
 
@@ -58,7 +58,7 @@
         // Visual loading indicator
         tableBody.innerHTML = `
             <tr>
-                <td colspan="5" class="py-12 text-center text-slate-500 font-medium">
+                <td colspan="6" class="py-12 text-center text-slate-500 font-medium">
                     <div class="inline-flex items-center gap-2">
                         <svg class="animate-spin h-5 w-5 text-[#0079C6]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -81,7 +81,7 @@
             if (!data.records || data.records.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="py-12 text-center text-slate-400 font-medium">
+                        <td colspan="6" class="py-12 text-center text-slate-400 font-medium">
                             <div class="flex flex-col items-center justify-center gap-2">
                                 <i data-lucide="inbox" class="w-8 h-8 text-slate-300"></i>
                                 <span>Tidak ada data transaksi untuk lokasi ini.</span>
@@ -94,15 +94,27 @@
             }
 
             tableBody.innerHTML = data.records.map(row => {
-                const statusColor = (row.status === 'Tidak Cocok') ? 'text-[#FF0000]' : 'text-slate-900';
+                const isNotMatch = (row.status === 'Tidak Cocok');
+                const statusColor = isNotMatch ? 'text-[#FF0000]' : 'text-[#00B050]';
+                const actionCell = isNotMatch 
+                    ? `<button type="button" 
+                                onclick='openSettlementModal(${JSON.stringify(row)})'
+                                class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                            Send
+                       </button>`
+                    : `<span class="text-slate-300">-</span>`;
+
                 return `
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="py-4 px-4 font-normal">${row.date}</td>
-                        <td class="py-4 px-4 font-normal">${row.admin}</td>
-                        <td class="py-4 px-4 font-normal">${row.mdd}</td>
-                        <td class="py-4 px-4 font-normal">${row.report}</td>
+                        <td class="py-4 px-4 font-normal text-slate-800">${row.date}</td>
+                        <td class="py-4 px-4 font-bold ${statusColor}">${row.admin}</td>
+                        <td class="py-4 px-4 font-bold ${statusColor}">${row.mdd}</td>
+                        <td class="py-4 px-4 font-bold ${statusColor}">${row.report}</td>
                         <td class="py-4 px-4 font-bold ${statusColor}">
                             ${row.status}
+                        </td>
+                        <td class="py-4 px-4">
+                            ${actionCell}
                         </td>
                     </tr>
                 `;
@@ -114,7 +126,7 @@
             console.error('Error fetching location data:', err);
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="py-8 text-center text-rose-500 font-medium">
+                    <td colspan="6" class="py-8 text-center text-rose-500 font-medium">
                         Gagal memuat data dari database. Silakan coba lagi.
                     </td>
                 </tr>
@@ -585,4 +597,67 @@
 
     // Initial render
     renderCurrentView();
+
+    // -------------------------------------------------------------
+    // 5. Settlement & Confirmation Popup Modal Handlers
+    // -------------------------------------------------------------
+    const settlementModal = document.getElementById('settlementModal');
+    const settlementBackdrop = document.getElementById('settlementBackdrop');
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmBackdrop = document.getElementById('confirmBackdrop');
+
+    const settlementModalDate = document.getElementById('settlementModalDate');
+    const settlementModalAdmin = document.getElementById('settlementModalAdmin');
+    const settlementModalMdd = document.getElementById('settlementModalMdd');
+    const settlementModalReport = document.getElementById('settlementModalReport');
+
+    window.openSettlementModal = function(data) {
+        if (settlementModalDate && data.date) settlementModalDate.textContent = data.date;
+        if (settlementModalAdmin && data.admin) settlementModalAdmin.textContent = 'Rp ' + data.admin;
+        if (settlementModalMdd && data.mdd) settlementModalMdd.textContent = 'Rp ' + data.mdd;
+        if (settlementModalReport && data.report) settlementModalReport.textContent = 'Rp ' + data.report;
+
+        if (settlementModal) {
+            settlementModal.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    };
+
+    window.closeSettlementModal = function() {
+        if (settlementModal) {
+            settlementModal.classList.add('hidden');
+        }
+    };
+
+    window.openConfirmModal = function() {
+        if (confirmModal) {
+            confirmModal.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    };
+
+    window.closeConfirmModal = function() {
+        if (confirmModal) {
+            confirmModal.classList.add('hidden');
+        }
+    };
+
+    window.handleKirimSettlement = function() {
+        // UI hardcode: close confirmation & settlement modal
+        closeConfirmModal();
+        closeSettlementModal();
+    };
+
+    // Close when clicking the dark background overlay
+    if (settlementBackdrop) {
+        settlementBackdrop.addEventListener('click', () => {
+            closeSettlementModal();
+        });
+    }
+
+    if (confirmBackdrop) {
+        confirmBackdrop.addEventListener('click', () => {
+            closeConfirmModal();
+        });
+    }
 </script>

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LokasiController;
 
 // Guest Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -19,4 +20,11 @@ Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->nam
 Route::middleware('auth')->group(function () {
     Route::get('/main', [DashboardController::class, 'index'])->name('dashboard.main');
     Route::get('/dashboard/data', [DashboardController::class, 'getData'])->name('dashboard.data');
+    Route::get('/online-monitoring', [DashboardController::class, 'onlineMonitoring'])->name('dashboard.online');
+
+    // Lokasi CRUD Routes
+    Route::get('/lokasi', [LokasiController::class, 'index'])->name('dashboard.lokasi');
+    Route::post('/lokasi', [LokasiController::class, 'store'])->name('dashboard.lokasi.store');
+    Route::put('/lokasi/{id}', [LokasiController::class, 'update'])->name('dashboard.lokasi.update');
+    Route::delete('/lokasi/{id}', [LokasiController::class, 'destroy'])->name('dashboard.lokasi.destroy');
 });

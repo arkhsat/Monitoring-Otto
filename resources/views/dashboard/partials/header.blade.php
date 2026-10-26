@@ -5,7 +5,9 @@
         <h1 class="text-xl md:text-2xl font-bold text-black tracking-tight">
             Dashboard System Monitoring Otto
         </h1>
-        <span class="text-slate-400 font-bold text-base md:text-lg">Main</span>
+        <span class="text-slate-400 font-bold text-base md:text-lg">
+            {{ $headerTitle ?? 'Main' }}
+        </span>
     </div>
 
     <!-- User Profile & Action -->
