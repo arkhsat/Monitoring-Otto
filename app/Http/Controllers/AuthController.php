@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
@@ -17,22 +18,14 @@ class AuthController extends Controller
             return redirect()->route('dashboard.main');
         }
 
-        return view('auth.login');
+        return view('pages.auth.login');
     }
 
     /**
      * Handle an incoming authentication request.
      */
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $credentials = $request->validate([
-            'username' => ['required', 'string'],
-            'password' => ['required', 'string'],
-        ], [
-            'username.required' => 'Nama pengguna wajib diisi.',
-            'password.required' => 'Password wajib diisi.',
-        ]);
-
         $loginInput = $request->input('username');
         $password = $request->input('password');
         $remember = $request->boolean('remember');
