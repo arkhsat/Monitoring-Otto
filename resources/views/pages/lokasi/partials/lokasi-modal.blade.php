@@ -11,7 +11,7 @@
                 <i data-lucide="map-pin" class="w-5 h-5 text-[#0079C6]"></i>
                 <span>Tambah Lokasi Baru</span>
             </h3>
-            <button type="button" onclick="closeLokasiModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+            <button type="button" onclick="closeLokasiModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
@@ -80,12 +80,12 @@
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 mt-6">
                 <button type="button" 
                         onclick="closeLokasiModal()" 
-                        class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-colors">
+                        class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-colors cursor-pointer">
                     Batal
                 </button>
                 <button type="submit" 
                         id="btnSimpanLokasi"
-                        class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white font-semibold text-sm rounded-xl shadow-md transition-all">
+                        class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white font-semibold text-sm rounded-xl shadow-md transition-all cursor-pointer">
                     <i data-lucide="check" class="w-4 h-4"></i>
                     <span>Simpan</span>
                 </button>
@@ -112,14 +112,13 @@
             @method('DELETE')
             <button type="button" 
                     onclick="closeDeleteLokasiModal()" 
-                    class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-colors">
+                    class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-colors cursor-pointer">
                 Batal
             </button>
             <button type="submit" 
-                    class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-semibold text-sm rounded-xl shadow-sm transition-all">
+                    class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-semibold text-sm rounded-xl shadow-sm transition-all cursor-pointer">
                 Hapus
             </button>
         </form>
     </div>
 </div>
-

@@ -1,10 +1,12 @@
+@extends('layouts.guest', ['title' => 'Login - Otto System Monitoring'])
+
+@section('content')
+    @include('pages.auth.partials.form')
+@endsection
+
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Initialize Lucide icons
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
-
         // Toggle Password Visibility
         const toggleBtn = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
@@ -38,3 +40,4 @@
         }
     });
 </script>
+@endpush

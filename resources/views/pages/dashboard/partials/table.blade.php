@@ -45,7 +45,7 @@
                                             mdd: '{{ $mdd }}',
                                             report: '{{ $report }}'
                                         })"
-                                        class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                                        class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all cursor-pointer">
                                     Send
                                 </button>
                             @else

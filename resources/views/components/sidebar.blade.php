@@ -13,10 +13,10 @@
 
         <!-- Full Logo (hidden when shrunk) -->
         <div id="sidebarFullLogo" class="flex-1 flex justify-center transition-opacity duration-200">
-            @include('partials.logo', ['class' => 'h-10 w-auto object-contain'])
+            @include('components.logo', ['class' => 'h-10 w-auto object-contain'])
         </div>
     </div>
 
     <!-- Navigation Links -->
-    @include('dashboard.partials.navigation')
+    @include('components.navigation')
 </aside>

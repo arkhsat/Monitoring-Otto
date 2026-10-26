@@ -62,14 +62,14 @@
         <div class="flex items-center justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-200">
             <button type="button" 
                     id="btnSettlementPdf" 
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold text-sm rounded-lg shadow-sm transition-all">
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold text-sm rounded-lg shadow-sm transition-all cursor-pointer">
                 <i data-lucide="file-text" class="w-4 h-4 text-rose-500"></i>
                 <span>PDF</span>
             </button>
             <button type="button" 
                     id="btnOpenConfirmModal" 
                     onclick="openConfirmModal()"
-                    class="inline-flex items-center gap-2 px-5 py-2 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white font-semibold text-sm rounded-lg shadow-sm transition-all">
+                    class="inline-flex items-center gap-2 px-5 py-2 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white font-semibold text-sm rounded-lg shadow-sm transition-all cursor-pointer">
                 <i data-lucide="send" class="w-4 h-4"></i>
                 <span>Send Settlement</span>
             </button>
@@ -98,16 +98,15 @@
         <div class="grid grid-cols-2 gap-3 w-full">
             <button type="button" 
                     onclick="closeConfirmModal()" 
-                    class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-lg transition-colors">
+                    class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-lg transition-colors cursor-pointer">
                 Batal
             </button>
             <button type="button" 
                     id="btnKirimSettlementAction"
                     onclick="handleKirimSettlement()" 
-                    class="w-full py-2.5 px-4 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white font-semibold text-sm rounded-lg shadow-sm transition-all">
+                    class="w-full py-2.5 px-4 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white font-semibold text-sm rounded-lg shadow-sm transition-all cursor-pointer">
                 Kirim Settlement
             </button>
         </div>
     </div>
 </div>
-

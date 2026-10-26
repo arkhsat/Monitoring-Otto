@@ -14,7 +14,7 @@
                 </h3>
                 <p id="historyModalLocationName" class="text-xs md:text-sm text-slate-500 font-medium mt-0.5">-</p>
             </div>
-            <button type="button" onclick="closeNetworkHistoryModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+            <button type="button" onclick="closeNetworkHistoryModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
@@ -75,10 +75,9 @@
         <div class="flex items-center justify-end px-6 py-4 bg-slate-50 border-t border-slate-200">
             <button type="button" 
                     onclick="closeNetworkHistoryModal()" 
-                    class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold text-sm rounded-lg transition-colors">
+                    class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold text-sm rounded-lg transition-colors cursor-pointer">
                 Tutup
             </button>
         </div>
     </div>
 </div>
-

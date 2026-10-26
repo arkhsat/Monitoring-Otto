@@ -32,7 +32,7 @@
 
         <!-- Location List Options -->
         <div class="max-h-64 overflow-y-auto divide-y divide-slate-100" id="locationList">
-            @include('dashboard.partials.location-options')
+            @include('pages.dashboard.partials.location-options')
         </div>
     </div>
 </div>

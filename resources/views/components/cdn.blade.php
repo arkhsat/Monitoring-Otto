@@ -1,8 +1,8 @@
-<!-- CDN Dependencies -->
+<!-- CDN Dependencies & Scripts -->
 {{-- Lucide Icons --}}
 <script src="https://unpkg.com/lucide@latest"></script>
 
-{{-- Tailwind CSS CDN & Custom Configuration --}}
+{{-- Tailwind CSS CDN & Theme Config --}}
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
     tailwind.config = {

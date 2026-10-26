@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LokasiController;
+use App\Http\Controllers\OnlineMonitoringController;
 
 // Guest Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -20,7 +21,7 @@ Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->nam
 Route::middleware('auth')->group(function () {
     Route::get('/main', [DashboardController::class, 'index'])->name('dashboard.main');
     Route::get('/dashboard/data', [DashboardController::class, 'getData'])->name('dashboard.data');
-    Route::get('/online-monitoring', [DashboardController::class, 'onlineMonitoring'])->name('dashboard.online');
+    Route::get('/online-monitoring', [OnlineMonitoringController::class, 'index'])->name('dashboard.online');
 
     // Lokasi CRUD Routes
     Route::get('/lokasi', [LokasiController::class, 'index'])->name('dashboard.lokasi');
