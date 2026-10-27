@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Login - Otto System Monitoring' }}</title>
+    <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('images/logo-utama.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
 
     {{-- Fonts --}}
     @include('components.fonts')
@@ -15,7 +17,7 @@
     {{-- Page-Specific Styles --}}
     @stack('styles')
 </head>
-<body class="min-h-screen w-full flex items-center justify-center bg-login-otto relative p-4">
+<body class="min-h-screen w-full flex items-center justify-center bg-login-otto bg-[#0079C6] relative p-4" style="background-image: url('{{ asset('images/bg-login.png') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
     <!-- Background Backdrop Overlay -->
     <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-[2px]"></div>

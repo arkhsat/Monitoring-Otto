@@ -28,8 +28,15 @@
     }
 
     let activeLocationKode = locationDropdownBtn ? (locationDropdownBtn.getAttribute('data-current-kode') || 1) : 1;
+    let activeDateFilter = {};
 
-    function fetchTableData(kode, date = null) {
+    function fetchTableData(kode, filter = null) {
+        if (typeof filter === 'string') {
+            activeDateFilter = { date: filter };
+        } else if (filter && typeof filter === 'object') {
+            activeDateFilter = filter;
+        }
+
         const tableBody = document.getElementById('tableBody');
         if (!tableBody) return;
 
@@ -42,15 +49,21 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                         </svg>
-                        <span>Memuat data dari database...</span>
+                        <span>Loading</span>
                     </div>
                 </td>
             </tr>
         `;
 
-        let url = `{{ route('dashboard.data') }}?kode=${encodeURIComponent(kode)}`;
-        if (date) {
-            url += `&date=${encodeURIComponent(date)}`;
+        let url = `/api/monitoring?kode=${encodeURIComponent(kode)}`;
+        if (activeDateFilter.start_date && activeDateFilter.end_date) {
+            url += `&start_date=${encodeURIComponent(activeDateFilter.start_date)}&end_date=${encodeURIComponent(activeDateFilter.end_date)}`;
+        } else if (activeDateFilter.date) {
+            url += `&date=${encodeURIComponent(activeDateFilter.date)}`;
+        } else if (activeDateFilter.month && activeDateFilter.year) {
+            url += `&month=${encodeURIComponent(activeDateFilter.month)}&year=${encodeURIComponent(activeDateFilter.year)}`;
+        } else if (activeDateFilter.year) {
+            url += `&year=${encodeURIComponent(activeDateFilter.year)}`;
         }
 
         fetch(url, {
@@ -59,9 +72,15 @@
                 'Accept': 'application/json'
             }
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            return res.json();
+        })
         .then(data => {
-            if (!data.records || data.records.length === 0) {
+            const records = data.data || data.records || [];
+            if (!records || records.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
                         <td colspan="6" class="py-12 text-center text-slate-400 font-medium">
@@ -76,7 +95,7 @@
                 return;
             }
 
-            tableBody.innerHTML = data.records.map(row => {
+            tableBody.innerHTML = records.map(row => {
                 const isNotMatch = (row.status === 'Tidak Cocok');
                 const statusColor = isNotMatch ? 'text-[#FF0000]' : 'text-[#00B050]';
                 const actionCell = isNotMatch 
@@ -110,7 +129,7 @@
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="6" class="py-8 text-center text-rose-500 font-medium">
-                        Gagal memuat data dari database. Silakan coba lagi.
+                        Failed to load data, Try Again.
                     </td>
                 </tr>
             `;
@@ -250,6 +269,38 @@
         });
     }
 
+    function applyCurrentModeFilter() {
+        if (currentMode === 'daily') {
+            if (selectedDateText) selectedDateText.textContent = formatDate(selectedDay);
+            fetchTableData(activeLocationKode, { date: formatIsoDate(selectedDay) });
+        } else if (currentMode === 'weekly') {
+            if (selectedDateText) selectedDateText.textContent = `${formatDate(selectedWeekStart)} - ${formatDate(selectedWeekEnd)}`;
+            fetchTableData(activeLocationKode, {
+                start_date: formatIsoDate(selectedWeekStart),
+                end_date: formatIsoDate(selectedWeekEnd)
+            });
+        } else if (currentMode === 'monthly') {
+            if (selectedDateText) selectedDateText.textContent = `${monthNames[selectedMonthIndex]} ${currentYear}`;
+            fetchTableData(activeLocationKode, {
+                month: selectedMonthIndex + 1,
+                year: currentYear
+            });
+        } else if (currentMode === 'yearly') {
+            if (selectedDateText) selectedDateText.textContent = `Tahun ${selectedYear}`;
+            fetchTableData(activeLocationKode, {
+                year: selectedYear
+            });
+        } else if (currentMode === 'custom') {
+            if (customRangeStart && customRangeEnd) {
+                if (selectedDateText) selectedDateText.textContent = `${formatDate(customRangeStart)} - ${formatDate(customRangeEnd)}`;
+                fetchTableData(activeLocationKode, {
+                    start_date: formatIsoDate(customRangeStart),
+                    end_date: formatIsoDate(customRangeEnd)
+                });
+            }
+        }
+    }
+
     modeTabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -262,6 +313,7 @@
 
             currentMode = tab.getAttribute('data-mode');
             renderCurrentView();
+            applyCurrentModeFilter();
         });
     });
 
@@ -384,7 +436,7 @@
                     selectedDay = cellDate;
                     if (selectedDateText) selectedDateText.textContent = formatDate(cellDate);
                     renderDaysGrid();
-                    fetchTableData(activeLocationKode, formatIsoDate(cellDate));
+                    fetchTableData(activeLocationKode, { date: formatIsoDate(cellDate) });
                 });
 
             } else if (currentMode === 'weekly') {
@@ -422,6 +474,10 @@
                     selectedWeekEnd = new Date(selectedWeekStart.getFullYear(), selectedWeekStart.getMonth(), selectedWeekStart.getDate() + 6);
                     if (selectedDateText) selectedDateText.textContent = `${formatDate(selectedWeekStart)} - ${formatDate(selectedWeekEnd)}`;
                     renderDaysGrid();
+                    fetchTableData(activeLocationKode, {
+                        start_date: formatIsoDate(selectedWeekStart),
+                        end_date: formatIsoDate(selectedWeekEnd)
+                    });
                 });
 
             } else if (currentMode === 'custom') {
@@ -450,6 +506,10 @@
                         customHoverDate = null;
                         if (selectedDateText) selectedDateText.textContent = `${formatDate(customRangeStart)} - ${formatDate(customRangeEnd)}`;
                         updateCustomHighlightDOM();
+                        fetchTableData(activeLocationKode, {
+                            start_date: formatIsoDate(customRangeStart),
+                            end_date: formatIsoDate(customRangeEnd)
+                        });
                     }
                 });
 
@@ -534,6 +594,10 @@
                 currentMonth = idx;
                 if (selectedDateText) selectedDateText.textContent = `${monthNames[idx]} ${currentYear}`;
                 renderMonthsGrid();
+                fetchTableData(activeLocationKode, {
+                    month: idx + 1,
+                    year: currentYear
+                });
             });
             monthsGrid.appendChild(btn);
         });
@@ -559,6 +623,9 @@
                 currentYear = y;
                 if (selectedDateText) selectedDateText.textContent = `Tahun ${y}`;
                 renderYearsGrid();
+                fetchTableData(activeLocationKode, {
+                    year: y
+                });
             });
             yearsGrid.appendChild(btn);
         }
@@ -575,6 +642,29 @@
             if (calendarChevron) calendarChevron.classList.remove('rotate-180');
         }
     });
+
+    // Reset date filter to Show All Dates
+    const resetDateFilterBtn = document.getElementById('resetDateFilterBtn');
+    const closeCalendarBtn = document.getElementById('closeCalendarBtn');
+
+    if (resetDateFilterBtn) {
+        resetDateFilterBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            activeDateFilter = {};
+            if (selectedDateText) selectedDateText.textContent = 'Semua Tanggal';
+            if (calendarDropdownMenu) calendarDropdownMenu.classList.add('hidden');
+            if (calendarChevron) calendarChevron.classList.remove('rotate-180');
+            fetchTableData(activeLocationKode, {});
+        });
+    }
+
+    if (closeCalendarBtn) {
+        closeCalendarBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (calendarDropdownMenu) calendarDropdownMenu.classList.add('hidden');
+            if (calendarChevron) calendarChevron.classList.remove('rotate-180');
+        });
+    }
 
     // -------------------------------------------------------------
     // Settlement & Confirmation Popup Modal Handlers

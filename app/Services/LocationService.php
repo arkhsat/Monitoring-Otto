@@ -62,7 +62,9 @@ class LocationService
             'iso_date' => $isoDate,
             'admin' => number_format($admin, 0, ',', '.'),
             'mdd' => number_format($mdd, 0, ',', '.'),
+            'settlement' => number_format($mdd, 0, ',', '.'),
             'report' => number_format($report, 0, ',', '.'),
+            'lokal' => number_format($report, 0, ',', '.'),
             'status' => $status,
             'is_match' => $isMatch,
             'kode' => $kode,
@@ -70,18 +72,42 @@ class LocationService
     }
 
     /**
-     * Fetch and format reconciliation records for a location code and optional date.
+     * Fetch and format reconciliation records for a location code and optional date/range/month/year.
      *
      * @param int $kode
      * @param string|null $date
+     * @param string|null $startDate
+     * @param string|null $endDate
+     * @param int|null $month
+     * @param int|null $year
      * @return array<int, array<string, mixed>>
      */
-    public function getRecordsByLocation(int $kode, ?string $date = null): array
-    {
+    public function getRecordsByLocation(
+        int $kode,
+        ?string $date = null,
+        ?string $startDate = null,
+        ?string $endDate = null,
+        ?int $month = null,
+        ?int $year = null
+    ): array {
         $query = DB::table('data')->where('Kode', $kode);
 
-        if (!empty($date)) {
+        if (!empty($startDate) && !empty($endDate)) {
+            $query->whereDate('Tanggal', '>=', $startDate)
+                  ->whereDate('Tanggal', '<=', $endDate);
+        } elseif (!empty($startDate)) {
+            $query->whereDate('Tanggal', '>=', $startDate);
+        } elseif (!empty($endDate)) {
+            $query->whereDate('Tanggal', '<=', $endDate);
+        } elseif (!empty($date)) {
             $query->whereDate('Tanggal', $date);
+        } elseif (!empty($month) && !empty($year)) {
+            $query->whereYear('Tanggal', $year)
+                  ->whereMonth('Tanggal', $month);
+        } elseif (!empty($year)) {
+            $query->whereYear('Tanggal', $year);
+        } elseif (!empty($month)) {
+            $query->whereMonth('Tanggal', $month);
         }
 
         $rawRecords = $query->orderBy('Tanggal', 'desc')->get();

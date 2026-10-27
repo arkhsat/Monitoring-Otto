@@ -69,5 +69,15 @@
         <div id="customHint" class="hidden mt-3 pt-2 border-t border-slate-100 text-[11px] text-center text-slate-500 font-medium">
             Klik tanggal awal, lalu klik tanggal akhir untuk rentang kustom.
         </div>
+
+        <!-- Footer Action: Tampilkan Semua Tanggal & Tutup -->
+        <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+            <button type="button" id="resetDateFilterBtn" class="text-slate-500 hover:text-[#0079C6] font-medium transition-colors">
+                Tampilkan Semua Tanggal
+            </button>
+            <button type="button" id="closeCalendarBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
+                Tutup
+            </button>
+        </div>
     </div>
 </div>

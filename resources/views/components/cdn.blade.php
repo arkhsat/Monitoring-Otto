@@ -24,6 +24,15 @@
     }
 </script>
 
+<style>
+    .bg-login-otto {
+        background-image: url('{{ asset('images/bg-login.png') }}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+</style>
+
 {{-- Vite Asset Fallback (Production / Bundled CSS & JS) --}}
 @if (file_exists(public_path('build/manifest.json')))
     @vite(['resources/css/app.css', 'resources/js/app.js'])

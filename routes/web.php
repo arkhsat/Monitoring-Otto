@@ -20,7 +20,7 @@ Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->nam
 // Authenticated Routes
 Route::middleware('auth')->group(function () {
     Route::get('/main', [DashboardController::class, 'index'])->name('dashboard.main');
-    Route::get('/dashboard/data', [DashboardController::class, 'getData'])->name('dashboard.data');
+    // Route::get('/dashboard/data', [DashboardController::class, 'getData'])->name('dashboard.data');
     Route::get('/online-monitoring', [OnlineMonitoringController::class, 'index'])->name('dashboard.online');
 
     // Lokasi CRUD Routes
