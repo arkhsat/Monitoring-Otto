@@ -52,8 +52,19 @@ class DashboardController extends Controller
     {
         $selectedKode = (int) $request->input('kode', $request->input('location', 1));
         $date = $request->input('date');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $month = $request->input('month');
+        $year = $request->input('year');
 
-        $records = $this->locationService->getRecordsByLocation($selectedKode, $date);
+        $records = $this->locationService->getRecordsByLocation(
+            $selectedKode,
+            $date,
+            $startDate,
+            $endDate,
+            $month ? (int) $month : null,
+            $year ? (int) $year : null
+        );
 
         return response()->json([
             'success' => true,
