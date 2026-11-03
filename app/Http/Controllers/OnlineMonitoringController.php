@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\LocationService;
-use App\Services\NetworkMonitoringService;
+use App\Services\OnlineMonitoringService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class OnlineMonitoringController extends Controller
 {
     public function __construct(
-        protected LocationService $locationService,
-        protected NetworkMonitoringService $networkService
+        protected OnlineMonitoringService $monitoringService
     ) {}
 
     /**
@@ -19,12 +17,12 @@ class OnlineMonitoringController extends Controller
      */
     public function index(Request $request): View
     {
-        $locations = $this->locationService->getLocations();
-        $networkData = $this->networkService->getNetworkStatus($locations);
+        $monitoringData = $this->monitoringService->getAllMonitoringData();
 
-        $networkLocations = $networkData['networkLocations'];
-        $summary = $networkData['summary'];
+        $networkLocations = $monitoringData['items'];
+        $summary = $monitoringData['summary'];
+        $serverTime = $monitoringData['server_time'];
 
-        return view('pages.online-monitoring.index', compact('locations', 'networkLocations', 'summary'));
+        return view('pages.online-monitoring.index', compact('networkLocations', 'summary', 'serverTime'));
     }
 }

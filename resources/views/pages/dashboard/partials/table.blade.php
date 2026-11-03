@@ -27,6 +27,7 @@
                         $status = $row['status'] ?? 'Cocok';
                         $isNotMatch = ($status === 'Tidak Cocok');
                         $textColor = $isNotMatch ? 'text-[#FF0000]' : 'text-[#00B050]';
+                        $ismddempty = ($mdd === '-');
                     @endphp
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="py-4 px-4 font-normal text-slate-800">{{ $date }}</td>
@@ -37,7 +38,7 @@
                             {{ $status }}
                         </td>
                         <td class="py-4 px-4">
-                            @if ($isNotMatch)
+                            @if ($ismddempty)
                                 <button type="button" 
                                         onclick="openSettlementModal({
                                             date: '{{ $date }}',
