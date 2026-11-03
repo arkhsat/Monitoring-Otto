@@ -24,9 +24,19 @@ class LokasiController extends Controller
      */
     public function store(LokasiRequest $request): RedirectResponse
     {
-        Lokasi::create($request->validated());
+        $validated = $request->validated();
 
-        return redirect()->route('dashboard.lokasi')->with('success', 'Lokasi baru berhasil ditambahkan!');
+        // Remove empty keys if any so model boot/defaults kick in
+        if (empty($validated['uuid_lokasi'])) {
+            unset($validated['uuid_lokasi']);
+        }
+        if (empty($validated['api_lokasi'])) {
+            unset($validated['api_lokasi']);
+        }
+
+        Lokasi::create($validated);
+
+        return redirect()->route('dashboard.lokasi')->with('success', 'Lokasi baru berhasil ditambahkan! UUID dan API Lokasi otomatis di-hash.');
     }
 
     /**
@@ -35,7 +45,17 @@ class LokasiController extends Controller
     public function update(LokasiRequest $request, int $id): RedirectResponse
     {
         $lokasi = Lokasi::findOrFail($id);
-        $lokasi->update($request->validated());
+        $validated = $request->validated();
+
+        // Do not overwrite existing hash if user left the fields blank in edit form
+        if (empty($validated['uuid_lokasi'])) {
+            unset($validated['uuid_lokasi']);
+        }
+        if (empty($validated['api_lokasi'])) {
+            unset($validated['api_lokasi']);
+        }
+
+        $lokasi->update($validated);
 
         return redirect()->route('dashboard.lokasi')->with('success', 'Lokasi berhasil diperbarui!');
     }

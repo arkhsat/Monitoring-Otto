@@ -11,13 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lokasis', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama_lokasi');
-            $table->text('keterangan_alamat')->nullable();
-            $table->integer('batas_waktu_henti')->default(60)->comment('Batas waktu henti / downtime limit threshold in seconds');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('lokasis')) {
+            Schema::create('lokasis', function (Blueprint $table) {
+                $table->id();
+                $table->string('uuid_lokasi')->nullable();
+                $table->string('nama_lokasi');
+                $table->text('keterangan_alamat')->nullable();
+                $table->string('api_lokasi')->nullable();
+                $table->integer('batas_waktu_henti')->default(60)->comment('Batas waktu henti / downtime limit threshold in seconds');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

@@ -25,6 +25,8 @@ class LokasiRequest extends FormRequest
             'nama_lokasi' => ['required', 'string', 'max:255'],
             'keterangan_alamat' => ['nullable', 'string'],
             'batas_waktu_henti' => ['required', 'integer', 'min:1'],
+            'uuid_lokasi' => ['nullable', 'string', 'max:255'],
+            'api_lokasi' => ['nullable', 'string', 'max:255'],
         ];
     }
 
