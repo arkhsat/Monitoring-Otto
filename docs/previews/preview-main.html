@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Preview Dashboard - Otto System Monitoring</title>
+
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar matching Figma style */
+        .figma-scrollbar::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        .figma-scrollbar::-webkit-scrollbar-track {
+            background: #BBE4FF;
+            border-radius: 9999px;
+            margin: 4px;
+        }
+        .figma-scrollbar::-webkit-scrollbar-thumb {
+            background: #0079C6;
+            border-radius: 9999px;
+        }
+        .figma-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #005f9e;
+        }
+    </style>
+</head>
+<body class="bg-[#0079C6] min-h-screen text-slate-800 p-3 lg:p-5 flex flex-col">
+
+    <!-- Overall Dashboard Wrapper -->
+    <div class="w-full flex-1 flex flex-col md:flex-row gap-4 items-stretch relative">
+
+        <!-- Collapsible / Shrinkable Sidebar -->
+        <aside id="sidebar" 
+               class="bg-white rounded-xl shadow-lg transition-all duration-300 ease-in-out flex flex-col p-3 shrink-0 w-full md:w-60"
+               data-expanded="true">
+            
+            <!-- Sidebar Header: Menu Toggle Icon & Logo -->
+            <div class="flex items-center gap-2 pb-4 border-b border-slate-100 justify-between">
+                <button id="sidebarToggle" 
+                        title="Toggle Sidebar" 
+                        class="p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer flex items-center justify-center">
+                    <i data-lucide="menu" class="w-7 h-7"></i>
+                </button>
+
+                <!-- Full Logo (hidden when shrunk) -->
+                <div id="sidebarFullLogo" class="flex-1 flex justify-center transition-opacity duration-200">
+                    <img src="images/logo-utama.png" 
+                         alt="Otto Logo" 
+                         class="h-10 w-auto object-contain">
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="mt-6 flex flex-col gap-2">
+                <a href="preview-main.html" 
+                   class="flex items-center gap-3 px-3 py-3 bg-[#0079C6] text-white rounded-lg font-bold text-base md:text-lg shadow-sm transition-all"
+                   title="Main Monitoring">
+                    <div class="w-6 h-6 flex items-center justify-center shrink-0">
+                        <i data-lucide="monitor" class="w-6 h-6"></i>
+                    </div>
+                    <span class="nav-label transition-opacity duration-200 whitespace-nowrap">Main</span>
+                </a>
+
+                <a href="preview-online.html" 
+                   class="flex items-center gap-3 px-3 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg font-bold text-base md:text-lg transition-all"
+                   title="Online Monitoring">
+                    <div class="w-6 h-6 flex items-center justify-center shrink-0">
+                        <i data-lucide="activity" class="w-6 h-6"></i>
+                    </div>
+                    <span class="nav-label transition-opacity duration-200 whitespace-nowrap">Online Monitoring</span>
+                </a>
+
+                <a href="preview-lokasi.html" 
+                   class="flex items-center gap-3 px-3 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg font-bold text-base md:text-lg transition-all"
+                   title="Manajemen Lokasi">
+                    <div class="w-6 h-6 flex items-center justify-center shrink-0">
+                        <i data-lucide="map-pin" class="w-6 h-6"></i>
+                    </div>
+                    <span class="nav-label transition-opacity duration-200 whitespace-nowrap">Lokasi</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col gap-4 min-w-0">
+
+            <!-- Top Header Card -->
+            <header class="bg-white rounded-xl shadow-md p-4 md:px-6 md:py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <!-- Title & Subtitle -->
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-black tracking-tight">
+                        Dashboard System Monitoring Otto
+                    </h1>
+                    <span class="text-slate-400 font-bold text-base md:text-lg">Main</span>
+                </div>
+
+                <!-- User Profile & Action -->
+                <div class="flex items-center gap-3 self-end md:self-center">
+                    <div class="text-right">
+                        <div class="text-sm md:text-base font-bold text-black">Otto Parking</div>
+                        <div class="text-xs md:text-sm font-bold text-[#0037FF]">Admin</div>
+                        <a href="preview-login.html" class="text-xs md:text-sm font-bold text-[#FF0000] hover:underline">
+                            Keluar
+                        </a>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
+                        <i data-lucide="circle-user-round" class="w-9 h-9 text-slate-600"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Filter Controls Bar -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-30">
+                
+                <!-- 1. Location Filter Card with Dropdown -->
+                <div class="relative bg-white rounded-xl shadow-sm p-4 flex items-center gap-3">
+                    <div class="text-slate-600 shrink-0">
+                        <i data-lucide="map-pin" class="w-6 h-6 text-[#0079C6]"></i>
+                    </div>
+                    <div class="flex-1 flex items-center gap-2">
+                        <span class="font-bold text-black text-sm md:text-base whitespace-nowrap">Pilih lokasi:</span>
+                        <div id="locationDropdownBtn" 
+                             class="flex-1 relative flex items-center justify-between border border-[#0079C6] rounded-lg px-3 py-2 cursor-pointer hover:border-[#005f9e] transition-all bg-white select-none">
+                            <div class="flex items-center gap-2 overflow-hidden">
+                                <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                <span id="selectedLocationText" class="text-sm text-slate-700 truncate">True Blue</span>
+                            </div>
+                            <i data-lucide="chevron-down" id="locationChevron" class="w-4 h-4 text-slate-400 shrink-0 ml-1 transition-transform"></i>
+                        </div>
+                    </div>
+
+                    <!-- Location Dropdown Menu -->
+                    <div id="locationDropdownMenu" 
+                         class="hidden absolute top-[calc(100%+8px)] left-4 right-4 md:left-[110px] md:w-[380px] bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-50">
+                        <div class="p-2 border-b border-slate-100">
+                            <div class="flex items-center px-2 py-1 bg-slate-50 rounded-lg border border-slate-200">
+                                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 mr-2"></i>
+                                <input type="text" 
+                                       id="locationSearchInput"
+                                       placeholder="Cari lokasi..." 
+                                       class="w-full text-xs text-slate-700 bg-transparent focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div class="max-h-64 overflow-y-auto divide-y divide-slate-100" id="locationList">
+                            <div class="location-item p-3 cursor-pointer bg-[#BBE4FF]/50 hover:bg-[#BBE4FF] transition-colors"
+                                 data-name="True Blue" 
+                                 data-address="Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330">
+                                <div class="font-bold text-black text-sm">True Blue</div>
+                                <div class="text-[11px] text-slate-500 leading-tight mt-0.5">
+                                    Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330
+                                </div>
+                            </div>
+                            <div class="location-item p-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                                 data-name="Gelael Tebet" 
+                                 data-address="Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330">
+                                <div class="font-bold text-black text-sm">Gelael Tebet</div>
+                                <div class="text-[11px] text-slate-500 leading-tight mt-0.5">
+                                    Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330
+                                </div>
+                            </div>
+                            <div class="location-item p-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                                 data-name="Intermark BSD" 
+                                 data-address="Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330">
+                                <div class="font-bold text-black text-sm">Intermark BSD</div>
+                                <div class="text-[11px] text-slate-500 leading-tight mt-0.5">
+                                    Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330
+                                </div>
+                            </div>
+                            <div class="location-item p-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                                 data-name="Ciracas Center" 
+                                 data-address="Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330">
+                                <div class="font-bold text-black text-sm">Ciracas Center</div>
+                                <div class="text-[11px] text-slate-500 leading-tight mt-0.5">
+                                    Jl. Raden Saleh Raya No.39, RT.1/RW.4, Cikini, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330
+                                </div>
+                            </div>
+                            <div class="location-item p-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                                 data-name="Lokasi baru" 
+                                 data-address="Keterangan lokasi baru">
+                                <div class="font-bold text-black text-sm">Lokasi baru</div>
+                                <div class="text-[11px] text-slate-500 leading-tight mt-0.5">
+                                    Keterangan lokasi baru
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Date Filter Card with Multi-Mode Interactive Calendar -->
+                <div class="relative bg-white rounded-xl shadow-sm p-4 flex items-center gap-3">
+                    <div class="text-slate-600 shrink-0">
+                        <i data-lucide="calendar-fold" class="w-6 h-6 text-[#0079C6]"></i>
+                    </div>
+                    <div class="flex-1 flex items-center gap-2">
+                        <span class="font-bold text-black text-sm md:text-base whitespace-nowrap">Atur tanggal:</span>
+                        <div id="calendarDropdownBtn" 
+                             class="flex-1 relative flex items-center justify-between border border-[#0079C6] rounded-lg px-3 py-2 cursor-pointer hover:border-[#005f9e] transition-all bg-white select-none">
+                            <span id="selectedDateText" class="text-sm font-medium text-slate-700">01/10/2026</span>
+                            <div class="flex items-center gap-1.5 text-slate-400">
+                                <i data-lucide="calendar" class="w-4 h-4 text-[#0079C6]"></i>
+                                <i data-lucide="chevron-down" id="calendarChevron" class="w-4 h-4 transition-transform"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Figma Design Calendar Popover Modal -->
+                    <div id="calendarDropdownMenu" 
+                         class="hidden absolute top-[calc(100%+8px)] right-4 md:right-0 w-[360px] sm:w-[380px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50">
+                        
+                        <!-- Top Mode Navigation Pill (Figma Exact) -->
+                        <div class="bg-slate-100 p-1 rounded-full flex items-center justify-between text-xs font-semibold text-slate-600 mb-3">
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all bg-white text-black font-bold shadow-sm" data-mode="daily">Daily</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="weekly">Weekly</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="monthly">Monthly</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="yearly">Yearly</button>
+                            <button type="button" class="mode-tab flex-1 py-1.5 rounded-full text-center transition-all hover:text-black" data-mode="custom">Custom</button>
+                        </div>
+
+                        <!-- Calendar Header (Month/Year display and Previous/Next buttons) -->
+                        <div class="flex items-center justify-between px-2 py-1 mb-2">
+                            <button id="calPrevBtn" class="p-1 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            </button>
+                            <span id="calHeaderTitle" class="text-sm font-bold text-slate-900 select-none">October 2026</span>
+                            <button id="calNextBtn" class="p-1 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        <!-- Container 1: Days View (for Daily, Weekly, Custom) -->
+                        <div id="daysViewContainer">
+                            <!-- Weekdays Header -->
+                            <div class="grid grid-cols-7 text-center text-xs text-slate-400 font-medium mb-1">
+                                <div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div><div>Su</div>
+                            </div>
+                            <!-- Days Grid Container -->
+                            <div id="calendarDaysGrid" class="grid grid-cols-7 text-center text-xs select-none">
+                                <!-- Dynamically generated cells -->
+                            </div>
+                        </div>
+
+                        <!-- Container 2: Monthly Grid View -->
+                        <div id="monthsViewContainer" class="hidden">
+                            <div id="monthsGrid" class="grid grid-cols-3 gap-3 p-2 text-center text-sm font-medium text-slate-700 select-none">
+                                <!-- Dynamically populated 12 months -->
+                            </div>
+                        </div>
+
+                        <!-- Container 3: Yearly Grid View -->
+                        <div id="yearsViewContainer" class="hidden">
+                            <div id="yearsGrid" class="grid grid-cols-3 gap-3 p-2 text-center text-sm font-medium text-slate-700 select-none">
+                                <!-- Dynamically populated decade years -->
+                            </div>
+                        </div>
+
+                        <!-- Custom Date Picker Helper Hint -->
+                        <div id="customHint" class="hidden mt-3 pt-2 border-t border-slate-100 text-[11px] text-center text-slate-500 font-medium">
+                            Klik tanggal awal, lalu klik tanggal akhir untuk rentang kustom.
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- Table Card with Explicit Scroll Container & Styled Scrollbar -->
+            <section class="bg-white rounded-xl shadow-lg p-4 md:p-6 flex-1 flex flex-col min-h-[500px]">
+                
+                <!-- Scrollable Table Container -->
+                <div class="overflow-y-auto overflow-x-auto figma-scrollbar max-h-[600px] pr-2">
+                    <table class="w-full text-center border-collapse">
+                        <!-- Sticky Table Head -->
+                        <thead class="sticky top-0 bg-white z-10">
+                            <tr class="border-b-2 border-slate-900 text-black font-bold text-base md:text-lg">
+                                <th class="py-3 px-4 text-center">Tanggal</th>
+                                <th class="py-3 px-4 text-center">Admin Otto</th>
+                                <th class="py-3 px-4 text-center">Settlement MDD</th>
+                                <th class="py-3 px-4 text-center">Report Lokasi</th>
+                                <th class="py-3 px-4 text-center">Keterangan</th>
+                                <th class="py-3 px-4 text-center">Send settlement MDD</th>
+                            </tr>
+                        </thead>
+
+                        <!-- Table Body with Long List for Smooth Scroll Demo -->
+                        <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-800 text-sm md:text-base">
+                            <!-- Row 1 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">01/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">960.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">Tidak Cocok</td>
+                                <td class="py-4 px-4">
+                                    <button type="button" 
+                                            onclick="openSettlementModal({date: '01/10/2026', admin: '900.000', mdd: '960.000', report: '900.000'})"
+                                            class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                                        Send
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- Row 2 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">02/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
+                            </tr>
+                            <!-- Row 3 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">03/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
+                            </tr>
+                            <!-- Row 4 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">04/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">960.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">Tidak Cocok</td>
+                                <td class="py-4 px-4">
+                                    <button type="button" 
+                                            onclick="openSettlementModal({date: '04/10/2026', admin: '900.000', mdd: '960.000', report: '900.000'})"
+                                            class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                                        Send
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- Row 5 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">05/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
+                            </tr>
+                            <!-- Row 6 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">06/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
+                            </tr>
+                            <!-- Row 7 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">07/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">960.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">Tidak Cocok</td>
+                                <td class="py-4 px-4">
+                                    <button type="button" 
+                                            onclick="openSettlementModal({date: '07/10/2026', admin: '900.000', mdd: '960.000', report: '900.000'})"
+                                            class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                                        Send
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- Row 8 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">08/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">900.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
+                            </tr>
+                            <!-- Row 9 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">09/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">920.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">920.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">920.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
+                            </tr>
+                            <!-- Row 10 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">10/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">950.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">980.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">950.000</td>
+                                <td class="py-4 px-4 font-bold text-[#FF0000]">Tidak Cocok</td>
+                                <td class="py-4 px-4">
+                                    <button type="button" 
+                                            onclick="openSettlementModal({date: '10/10/2026', admin: '950.000', mdd: '980.000', report: '950.000'})"
+                                            class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                                        Send
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- Row 11 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">11/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">950.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">950.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">950.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
+                            </tr>
+                            <!-- Row 12 -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 font-normal text-slate-800">12/10/2026</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">910.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">910.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">910.000</td>
+                                <td class="py-4 px-4 font-bold text-[#00B050]">Cocok</td>
+                                <td class="py-4 px-4"><span class="text-slate-300">-</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+    </div>
+
+    <!-- Settlement Popup Modal -->
+    <div id="settlementModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <!-- Dark Backdrop -->
+        <div id="settlementBackdrop" class="fixed inset-0 bg-black/60 transition-opacity backdrop-blur-[1px]"></div>
+
+        <!-- Modal Dialog Window -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl z-10 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+                <h3 class="text-lg md:text-xl font-bold text-slate-900">Settlement MDD</h3>
+                <button type="button" onclick="closeSettlementModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Body / Content -->
+            <div class="p-6 overflow-y-auto space-y-5">
+                <!-- Details Summary Box -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                    <div>
+                        <span class="text-xs text-slate-500 block">Tanggal</span>
+                        <span id="settlementModalDate" class="font-bold text-slate-800">-</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-500 block">Admin Otto</span>
+                        <span id="settlementModalAdmin" class="font-bold text-slate-800">Rp 900.000</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-500 block">Settlement MDD</span>
+                        <span id="settlementModalMdd" class="font-bold text-rose-600">Rp 960.000</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-500 block">Report Lokasi</span>
+                        <span id="settlementModalReport" class="font-bold text-slate-800">Rp 900.000</span>
+                    </div>
+                </div>
+
+                <!-- Settlement Preview / Information -->
+                <div class="border border-slate-200 rounded-xl p-4 bg-white">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                        <span class="text-sm font-semibold text-slate-800">Rincian Perbedaan Selisih</span>
+                        <span class="text-xs font-bold text-[#FF0000] bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">Tidak Cocok</span>
+                    </div>
+                    <div class="space-y-2 text-sm text-slate-600">
+                        <div class="flex justify-between">
+                            <span>Total Transaksi Tercatat:</span>
+                            <span class="font-medium text-slate-800">Rp 960.000</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Selisih dengan Admin Otto:</span>
+                            <span class="font-bold text-rose-600">+ Rp 60.000</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Status Rekonsiliasi:</span>
+                            <span class="font-medium text-amber-600">Menunggu Verifikasi Settlement</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Actions (PDF & Send Settlement) -->
+            <div class="flex items-center justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-200">
+                <button type="button" 
+                        id="btnSettlementPdf" 
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold text-sm rounded-lg shadow-sm transition-all">
+                    <i data-lucide="file-text" class="w-4 h-4 text-rose-500"></i>
+                    <span>PDF</span>
+                </button>
+                <button type="button" 
+                        id="btnOpenConfirmModal" 
+                        onclick="openConfirmModal()"
+                        class="inline-flex items-center gap-2 px-5 py-2 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white font-semibold text-sm rounded-lg shadow-sm transition-all">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    <span>Send Settlement</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Popup Modal -->
+    <div id="confirmModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <!-- Dark Backdrop for confirmation -->
+        <div id="confirmBackdrop" class="fixed inset-0 bg-black/60 transition-opacity backdrop-blur-[1px]"></div>
+
+        <!-- Confirmation Dialog Window -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden flex flex-col p-6 animate-in fade-in zoom-in-95 duration-150">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-14 h-14 rounded-full bg-blue-50 text-[#0079C6] flex items-center justify-center mb-4">
+                    <i data-lucide="help-circle" class="w-8 h-8"></i>
+                </div>
+                <h4 class="text-xl font-bold text-slate-900 mb-2">Kirim Settlement MDD?</h4>
+                <p class="text-sm text-slate-600 mb-6">
+                    Apakah Anda yakin ingin mengirim data settlement ini untuk diproses lebih lanjut?
+                </p>
+            </div>
+
+            <!-- Buttons: Batal & Kirim Settlement -->
+            <div class="grid grid-cols-2 gap-3 w-full">
+                <button type="button" 
+                        onclick="closeConfirmModal()" 
+                        class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-lg transition-colors">
+                    Batal
+                </button>
+                <button type="button" 
+                        id="btnKirimSettlementAction"
+                        onclick="handleKirimSettlement()" 
+                        class="w-full py-2.5 px-4 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white font-semibold text-sm rounded-lg shadow-sm transition-all">
+                    Kirim Settlement
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive JavaScript -->
+    <script>
+        // 1. Initialize Lucide Icons
+        lucide.createIcons();
+
+        // 2. Sidebar Shrink / Expand Logic
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarFullLogo = document.getElementById('sidebarFullLogo');
+        const navLabels = document.querySelectorAll('.nav-label');
+
+        let isExpanded = true;
+        sidebarToggle.addEventListener('click', () => {
+            isExpanded = !isExpanded;
+            if (isExpanded) {
+                sidebar.classList.remove('md:w-20');
+                sidebar.classList.add('md:w-60');
+                sidebarFullLogo.classList.remove('hidden');
+                navLabels.forEach(lbl => lbl.classList.remove('hidden'));
+            } else {
+                sidebar.classList.remove('md:w-60');
+                sidebar.classList.add('md:w-20');
+                sidebarFullLogo.classList.add('hidden');
+                navLabels.forEach(lbl => lbl.classList.add('hidden'));
+            }
+        });
+
+        // 3. Location Dropdown Logic
+        const locationDropdownBtn = document.getElementById('locationDropdownBtn');
+        const locationDropdownMenu = document.getElementById('locationDropdownMenu');
+        const locationChevron = document.getElementById('locationChevron');
+        const selectedLocationText = document.getElementById('selectedLocationText');
+        const locationItems = document.querySelectorAll('.location-item');
+        const locationSearchInput = document.getElementById('locationSearchInput');
+
+        locationDropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            calendarDropdownMenu.classList.add('hidden');
+            calendarChevron.classList.remove('rotate-180');
+            
+            const isOpen = !locationDropdownMenu.classList.contains('hidden');
+            if (isOpen) {
+                locationDropdownMenu.classList.add('hidden');
+                locationChevron.classList.remove('rotate-180');
+            } else {
+                locationDropdownMenu.classList.remove('hidden');
+                locationChevron.classList.add('rotate-180');
+                locationSearchInput.focus();
+            }
+        });
+
+        locationItems.forEach(item => {
+            item.addEventListener('click', () => {
+                locationItems.forEach(i => {
+                    i.classList.remove('bg-[#BBE4FF]/50', 'bg-[#BBE4FF]');
+                });
+                item.classList.add('bg-[#BBE4FF]/50');
+                selectedLocationText.textContent = item.getAttribute('data-name');
+                locationDropdownMenu.classList.add('hidden');
+                locationChevron.classList.remove('rotate-180');
+            });
+        });
+
+        locationSearchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            locationItems.forEach(item => {
+                const name = item.getAttribute('data-name').toLowerCase();
+                const addr = item.getAttribute('data-address').toLowerCase();
+                if (name.includes(query) || addr.includes(query)) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        });
+
+        // -------------------------------------------------------------
+        // 4. Enhanced Multi-Mode Calendar Engine (Figma Accurate)
+        // -------------------------------------------------------------
+        const calendarDropdownBtn = document.getElementById('calendarDropdownBtn');
+        const calendarDropdownMenu = document.getElementById('calendarDropdownMenu');
+        const calendarChevron = document.getElementById('calendarChevron');
+        const selectedDateText = document.getElementById('selectedDateText');
+        
+        const modeTabs = document.querySelectorAll('.mode-tab');
+        const calHeaderTitle = document.getElementById('calHeaderTitle');
+        const calPrevBtn = document.getElementById('calPrevBtn');
+        const calNextBtn = document.getElementById('calNextBtn');
+        
+        const daysViewContainer = document.getElementById('daysViewContainer');
+        const monthsViewContainer = document.getElementById('monthsViewContainer');
+        const yearsViewContainer = document.getElementById('yearsViewContainer');
+        const customHint = document.getElementById('customHint');
+        const calendarDaysGrid = document.getElementById('calendarDaysGrid');
+        const monthsGrid = document.getElementById('monthsGrid');
+        const yearsGrid = document.getElementById('yearsGrid');
+
+        let currentMode = 'daily';
+        let currentYear = 2026;
+        let currentMonth = 9; // October (0-indexed: 9 = October)
+        let decadeStartYear = 2020;
+
+        // Selection states
+        let selectedDay = new Date(2026, 9, 1);
+        let selectedWeekStart = new Date(2026, 8, 28); // 28 Sept 2026 (Mo)
+        let selectedWeekEnd = new Date(2026, 9, 4);   // 4 Oct 2026 (Su)
+        let selectedMonthIndex = 1; // Feb (from Figma mockup)
+        let selectedYear = 2021;    // 2021 (from Figma mockup)
+        let customRangeStart = new Date(2026, 9, 1);
+        let customRangeEnd = new Date(2026, 9, 23);
+        let customHoverDate = null;
+        let isSelectingCustom = false;
+
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const monthShortNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        // Helpers
+        function formatDate(d) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function isSameDay(d1, d2) {
+            return d1 && d2 &&
+                   d1.getFullYear() === d2.getFullYear() &&
+                   d1.getMonth() === d2.getMonth() &&
+                   d1.getDate() === d2.getDate();
+        }
+
+        function isBetween(d, start, end) {
+            if (!start || !end) return false;
+            const t = d.getTime();
+            const s = Math.min(start.getTime(), end.getTime());
+            const e = Math.max(start.getTime(), end.getTime());
+            return t >= s && t <= e;
+        }
+
+        // Toggle calendar dropdown open/close
+        calendarDropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            locationDropdownMenu.classList.add('hidden');
+            locationChevron.classList.remove('rotate-180');
+
+            const isOpen = !calendarDropdownMenu.classList.contains('hidden');
+            if (isOpen) {
+                calendarDropdownMenu.classList.add('hidden');
+                calendarChevron.classList.remove('rotate-180');
+            } else {
+                calendarDropdownMenu.classList.remove('hidden');
+                calendarChevron.classList.add('rotate-180');
+                renderCurrentView();
+            }
+        });
+
+        // Mode Tab Selection
+        modeTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.stopPropagation();
+                modeTabs.forEach(t => {
+                    t.classList.remove('bg-white', 'text-black', 'font-bold', 'shadow-sm');
+                    t.classList.add('text-slate-600', 'hover:text-black');
+                });
+                tab.classList.add('bg-white', 'text-black', 'font-bold', 'shadow-sm');
+                tab.classList.remove('text-slate-600', 'hover:text-black');
+
+                currentMode = tab.getAttribute('data-mode');
+                renderCurrentView();
+            });
+        });
+
+        // Previous / Next Header Navigation
+        calPrevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (currentMode === 'monthly') {
+                currentYear--;
+            } else if (currentMode === 'yearly') {
+                decadeStartYear -= 10;
+            } else {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+            }
+            renderCurrentView();
+        });
+
+        calNextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (currentMode === 'monthly') {
+                currentYear++;
+            } else if (currentMode === 'yearly') {
+                decadeStartYear += 10;
+            } else {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+            }
+            renderCurrentView();
+        });
+
+        function renderCurrentView() {
+            daysViewContainer.classList.add('hidden');
+            monthsViewContainer.classList.add('hidden');
+            yearsViewContainer.classList.add('hidden');
+            customHint.classList.add('hidden');
+
+            if (currentMode === 'monthly') {
+                monthsViewContainer.classList.remove('hidden');
+                calHeaderTitle.textContent = `${currentYear}`;
+                renderMonthsGrid();
+            } else if (currentMode === 'yearly') {
+                yearsViewContainer.classList.remove('hidden');
+                calHeaderTitle.textContent = `${decadeStartYear} – ${decadeStartYear + 9}`;
+                renderYearsGrid();
+            } else {
+                daysViewContainer.classList.remove('hidden');
+                calHeaderTitle.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                if (currentMode === 'custom') {
+                    customHint.classList.remove('hidden');
+                }
+                renderDaysGrid();
+            }
+        }
+
+        // Render Days Grid (Daily, Weekly, Custom)
+        function renderDaysGrid() {
+            calendarDaysGrid.innerHTML = '';
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            // Monday is first day of week: (firstDay.getDay() + 6) % 7
+            const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const prevMonthDays = new Date(currentYear, currentMonth, 0).getDate();
+
+            // Total 35 or 42 cells (5 or 6 weeks)
+            const totalCells = (startingDayOfWeek + daysInMonth > 35) ? 42 : 35;
+
+            for (let i = 0; i < totalCells; i++) {
+                let cellDate;
+                let isCurrentMonth = true;
+
+                if (i < startingDayOfWeek) {
+                    const prevD = prevMonthDays - startingDayOfWeek + i + 1;
+                    cellDate = new Date(currentYear, currentMonth - 1, prevD);
+                    isCurrentMonth = false;
+                } else if (i >= startingDayOfWeek + daysInMonth) {
+                    const nextD = i - (startingDayOfWeek + daysInMonth) + 1;
+                    cellDate = new Date(currentYear, currentMonth + 1, nextD);
+                    isCurrentMonth = false;
+                } else {
+                    const d = i - startingDayOfWeek + 1;
+                    cellDate = new Date(currentYear, currentMonth, d);
+                }
+
+                const dayOfWeek = cellDate.getDay(); // 0 is Sunday, 6 is Saturday
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
+                const cellWrapper = document.createElement('div');
+                cellWrapper.className = 'py-0.5 relative flex items-center justify-center cursor-pointer';
+
+                const cellBtn = document.createElement('div');
+                cellBtn.className = 'w-8 h-8 rounded-full flex items-center justify-center transition-all z-10 text-xs font-medium';
+                cellBtn.textContent = cellDate.getDate();
+
+                // Style based on Current Mode
+                if (currentMode === 'daily') {
+                    if (!isCurrentMonth) {
+                        cellBtn.classList.add('text-slate-300');
+                    } else if (isWeekend) {
+                        cellBtn.classList.add('text-red-500');
+                    } else {
+                        cellBtn.classList.add('text-slate-800');
+                    }
+
+                    if (isSameDay(cellDate, selectedDay)) {
+                        // Figma exact: rounded circular light-gray background with black font
+                        cellBtn.className = 'w-8 h-8 rounded-full flex items-center justify-center z-10 text-xs font-bold bg-[#E5E7EB] text-black shadow-sm';
+                    } else {
+                        cellBtn.classList.add('hover:bg-slate-100');
+                    }
+
+                    cellWrapper.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectedDay = cellDate;
+                        selectedDateText.textContent = formatDate(cellDate);
+                        renderDaysGrid();
+                    });
+
+                } else if (currentMode === 'weekly') {
+                    const inWeekRange = isBetween(cellDate, selectedWeekStart, selectedWeekEnd);
+                    const isStart = isSameDay(cellDate, selectedWeekStart);
+                    const isEnd = isSameDay(cellDate, selectedWeekEnd);
+
+                    if (inWeekRange) {
+                        // Figma: continuous light gray banner, with bright blue endpoints
+                        const strip = document.createElement('div');
+                        strip.className = 'absolute inset-y-0.5 inset-x-0 bg-[#F3F4F6] z-0';
+                        if (isStart) strip.classList.add('rounded-l-full');
+                        if (isEnd) strip.classList.add('rounded-r-full');
+                        cellWrapper.appendChild(strip);
+
+                        if (isStart || isEnd) {
+                            cellBtn.className = 'w-8 h-8 rounded-full flex items-center justify-center z-10 text-xs font-bold bg-[#0079C6] text-white shadow-sm';
+                        } else {
+                            cellBtn.className = 'w-8 h-8 flex items-center justify-center z-10 text-xs text-slate-800 font-medium';
+                        }
+                    } else {
+                        if (!isCurrentMonth) {
+                            cellBtn.classList.add('text-slate-300');
+                        } else if (isWeekend) {
+                            cellBtn.classList.add('text-red-500');
+                        } else {
+                            cellBtn.classList.add('text-slate-800');
+                        }
+                        cellBtn.classList.add('hover:bg-slate-100');
+                    }
+
+                    // Selecting any day selects that whole 7-day span
+                    cellWrapper.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Find Monday of the chosen week
+                        const dayOffset = (cellDate.getDay() + 6) % 7;
+                        selectedWeekStart = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate() - dayOffset);
+                        selectedWeekEnd = new Date(selectedWeekStart.getFullYear(), selectedWeekStart.getMonth(), selectedWeekStart.getDate() + 6);
+                        selectedDateText.textContent = `${formatDate(selectedWeekStart)} - ${formatDate(selectedWeekEnd)}`;
+                        renderDaysGrid();
+                    });
+
+                } else if (currentMode === 'custom') {
+                    cellWrapper.setAttribute('data-timestamp', cellDate.getTime());
+                    cellWrapper.setAttribute('data-weekend', isWeekend);
+                    cellWrapper.setAttribute('data-current-month', isCurrentMonth);
+                    cellBtn.setAttribute('data-day-number', cellDate.getDate());
+
+                    // Click event: 1st click pins start; 2nd click pins end; subsequent click starts new range
+                    cellWrapper.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (!isSelectingCustom) {
+                            // 1st click: Pin start date
+                            customRangeStart = cellDate;
+                            customRangeEnd = null;
+                            customHoverDate = cellDate;
+                            isSelectingCustom = true;
+                            selectedDateText.textContent = `${formatDate(customRangeStart)} - ...`;
+                            updateCustomHighlightDOM();
+                        } else {
+                            // 2nd click: Pin end date and complete selection
+                            isSelectingCustom = false;
+                            if (cellDate.getTime() < customRangeStart.getTime()) {
+                                customRangeEnd = customRangeStart;
+                                customRangeStart = cellDate;
+                            } else {
+                                customRangeEnd = cellDate;
+                            }
+                            customHoverDate = null;
+                            selectedDateText.textContent = `${formatDate(customRangeStart)} - ${formatDate(customRangeEnd)}`;
+                            updateCustomHighlightDOM();
+                        }
+                    });
+
+                    // Mouseenter event: only update styles of existing DOM elements without re-rendering the grid
+                    cellWrapper.addEventListener('mouseenter', () => {
+                        if (isSelectingCustom) {
+                            customHoverDate = cellDate;
+                            updateCustomHighlightDOM();
+                        }
+                    });
+                }
+
+                cellWrapper.appendChild(cellBtn);
+                calendarDaysGrid.appendChild(cellWrapper);
+            }
+
+            if (currentMode === 'custom') {
+                updateCustomHighlightDOM();
+            }
+        }
+
+        // Live styling helper for Custom Mode (never replaces DOM or removes click listeners)
+        function updateCustomHighlightDOM() {
+            const effectiveEnd = isSelectingCustom ? (customHoverDate || customRangeStart) : customRangeEnd;
+            const cells = calendarDaysGrid.querySelectorAll('[data-timestamp]');
+
+            cells.forEach(wrapper => {
+                const ts = parseInt(wrapper.getAttribute('data-timestamp'));
+                const cellDate = new Date(ts);
+                const isWeekend = wrapper.getAttribute('data-weekend') === 'true';
+                const isCurrentMonth = wrapper.getAttribute('data-current-month') === 'true';
+                const btn = wrapper.querySelector('div[data-day-number]');
+
+                // Remove existing strip if any
+                const existingStrip = wrapper.querySelector('.custom-range-strip');
+                if (existingStrip) existingStrip.remove();
+
+                const inRange = isBetween(cellDate, customRangeStart, effectiveEnd);
+                const isStart = isSameDay(cellDate, customRangeStart);
+                const isEnd = isSameDay(cellDate, effectiveEnd);
+
+                if (inRange) {
+                    const strip = document.createElement('div');
+                    strip.className = 'custom-range-strip absolute inset-y-0.5 inset-x-0 bg-[#E0F2FE] z-0 pointer-events-none';
+                    if (isStart) strip.classList.add('rounded-l-full');
+                    if (isEnd) strip.classList.add('rounded-r-full');
+                    wrapper.insertBefore(strip, btn);
+
+                    if (isStart || isEnd) {
+                        btn.className = 'w-8 h-8 rounded-full flex items-center justify-center z-10 text-xs font-bold bg-[#0079C6] text-white shadow-sm pointer-events-none';
+                    } else {
+                        btn.className = 'w-8 h-8 flex items-center justify-center z-10 text-xs font-medium pointer-events-none ' + (isWeekend ? 'text-red-500' : 'text-slate-800');
+                    }
+                } else {
+                    btn.className = 'w-8 h-8 rounded-full flex items-center justify-center z-10 text-xs font-medium hover:bg-slate-100 pointer-events-none';
+                    if (!isCurrentMonth) {
+                        btn.classList.add('text-slate-300');
+                    } else if (isWeekend) {
+                        btn.classList.add('text-red-500');
+                    } else {
+                        btn.classList.add('text-slate-800');
+                    }
+                }
+            });
+        }
+
+        // Render Months Grid (Monthly Mode)
+        function renderMonthsGrid() {
+            monthsGrid.innerHTML = '';
+            monthShortNames.forEach((name, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'py-3 px-2 rounded-xl cursor-pointer transition-colors';
+                btn.textContent = name;
+
+                if (idx === selectedMonthIndex) {
+                    // Figma exact: light grey rounded box
+                    btn.classList.add('bg-[#F3F4F6]', 'text-black', 'font-bold');
+                } else {
+                    btn.classList.add('hover:bg-slate-100', 'text-slate-700');
+                }
+
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectedMonthIndex = idx;
+                    currentMonth = idx;
+                    selectedDateText.textContent = `${monthNames[idx]} ${currentYear}`;
+                    renderMonthsGrid();
+                });
+                monthsGrid.appendChild(btn);
+            });
+        }
+
+        // Render Years Grid (Yearly Mode)
+        function renderYearsGrid() {
+            yearsGrid.innerHTML = '';
+            for (let y = decadeStartYear; y <= decadeStartYear + 9; y++) {
+                const btn = document.createElement('div');
+                btn.className = 'py-3 px-2 rounded-xl cursor-pointer transition-colors';
+                btn.textContent = y;
+
+                if (y === selectedYear) {
+                    // Figma exact: light grey rounded box
+                    btn.classList.add('bg-[#F3F4F6]', 'text-black', 'font-bold');
+                } else {
+                    btn.classList.add('hover:bg-slate-100', 'text-slate-700');
+                }
+
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectedYear = y;
+                    currentYear = y;
+                    selectedDateText.textContent = `Tahun ${y}`;
+                    renderYearsGrid();
+                });
+                yearsGrid.appendChild(btn);
+            }
+        }
+
+        // Close dropdowns on outside click
+        document.addEventListener('click', (e) => {
+            if (!locationDropdownBtn.contains(e.target) && !locationDropdownMenu.contains(e.target)) {
+                locationDropdownMenu.classList.add('hidden');
+                locationChevron.classList.remove('rotate-180');
+            }
+            if (!calendarDropdownBtn.contains(e.target) && !calendarDropdownMenu.contains(e.target)) {
+                calendarDropdownMenu.classList.add('hidden');
+                calendarChevron.classList.remove('rotate-180');
+            }
+        });
+
+        // Initial render
+        renderCurrentView();
+
+        // -------------------------------------------------------------
+        // Settlement & Confirmation Popup Modal Handlers
+        // -------------------------------------------------------------
+        const settlementModal = document.getElementById('settlementModal');
+        const settlementBackdrop = document.getElementById('settlementBackdrop');
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmBackdrop = document.getElementById('confirmBackdrop');
+
+        const settlementModalDate = document.getElementById('settlementModalDate');
+        const settlementModalAdmin = document.getElementById('settlementModalAdmin');
+        const settlementModalMdd = document.getElementById('settlementModalMdd');
+        const settlementModalReport = document.getElementById('settlementModalReport');
+
+        window.openSettlementModal = function(data) {
+            if (settlementModalDate && data.date) settlementModalDate.textContent = data.date;
+            if (settlementModalAdmin && data.admin) settlementModalAdmin.textContent = 'Rp ' + data.admin;
+            if (settlementModalMdd && data.mdd) settlementModalMdd.textContent = 'Rp ' + data.mdd;
+            if (settlementModalReport && data.report) settlementModalReport.textContent = 'Rp ' + data.report;
+
+            if (settlementModal) {
+                settlementModal.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        };
+
+        window.closeSettlementModal = function() {
+            if (settlementModal) {
+                settlementModal.classList.add('hidden');
+            }
+        };
+
+        window.openConfirmModal = function() {
+            if (confirmModal) {
+                confirmModal.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        };
+
+        window.closeConfirmModal = function() {
+            if (confirmModal) {
+                confirmModal.classList.add('hidden');
+            }
+        };
+
+        window.handleKirimSettlement = function() {
+            // UI hardcode: close confirmation & settlement modal
+            closeConfirmModal();
+            closeSettlementModal();
+        };
+
+        // Close when clicking the dark background overlay
+        if (settlementBackdrop) {
+            settlementBackdrop.addEventListener('click', () => {
+                closeSettlementModal();
+            });
+        }
+
+        if (confirmBackdrop) {
+            confirmBackdrop.addEventListener('click', () => {
+                closeConfirmModal();
+            });
+        }
+    </script>
+</body>
+</html>

@@ -6,6 +6,39 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --color-otto-blue: #066AB7;
+    --color-otto-blue-dark: #055696;
+    --color-otto-sky: #0079C6;
+    --color-otto-border: #8F9EB3;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Custom scrollbar matching Figma style */
+.figma-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+.figma-scrollbar::-webkit-scrollbar-track {
+    background: #BBE4FF;
+    border-radius: 9999px;
+    margin: 4px;
+}
+.figma-scrollbar::-webkit-scrollbar-thumb {
+    background: #0079C6;
+    border-radius: 9999px;
+}
+.figma-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #005f9e;
+}
+
+/* Login Page Background */
+.bg-login-otto {
+    background-image: url('/images/bg-login.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
