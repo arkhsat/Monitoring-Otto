@@ -231,7 +231,14 @@ class OnlineMonitoringService
     protected function getLocalMonitoringData(): array
     {
         $serverNow = Carbon::now();
-        $locations = Lokasi::with('onlineMonitoring')->orderBy('id', 'asc')->get();
+        $locations = collect([]);
+
+        try {
+            $locations = Lokasi::with('onlineMonitoring')->orderBy('id', 'asc')->get();
+        } catch (\Throwable $e) {
+            // Database lokal offline
+            $locations = collect([]);
+        }
 
         $items = [];
         $countOnline = 0;
@@ -314,20 +321,24 @@ class OnlineMonitoringService
      */
     protected function syncRemoteMonitoringToLocal(array $items): void
     {
-        foreach ($items as $item) {
-            $lokasiId = $item['lokasi_id'] ?? null;
-            if (!$lokasiId) continue;
+        try {
+            foreach ($items as $item) {
+                $lokasiId = $item['lokasi_id'] ?? null;
+                if (!$lokasiId) continue;
 
-            $device = OnlineMonitoring::firstOrNew(['lokasi_id' => $lokasiId]);
-            $device->jaringan = $item['network'] ?? ($device->jaringan ?: 'Dynamic / DHCP Network');
-            if (isset($item['ip_address'])) {
-                $device->ip_address = $item['ip_address'];
+                $device = OnlineMonitoring::firstOrNew(['lokasi_id' => $lokasiId]);
+                $device->jaringan = $item['network'] ?? ($device->jaringan ?: 'Dynamic / DHCP Network');
+                if (isset($item['ip_address'])) {
+                    $device->ip_address = $item['ip_address'];
+                }
+                $device->status = $item['status'] ?? 'Offline';
+                if (!empty($item['last_update'])) {
+                    $device->last_update = Carbon::parse($item['last_update']);
+                }
+                $device->save();
             }
-            $device->status = $item['status'] ?? 'Offline';
-            if (!empty($item['last_update'])) {
-                $device->last_update = Carbon::parse($item['last_update']);
-            }
-            $device->save();
+        } catch (\Throwable $e) {
+            // Database lokal tidak terhubung / offline
         }
     }
 

@@ -100,21 +100,27 @@ class RemoteLokasiService
             if ($response->successful() && (!isset($json['success']) || $json['success'] === true)) {
                 $remoteId = $json['id'] ?? ($json['data']['id'] ?? null);
 
-                // Buat juga di database lokal
-                $localData = $data;
-                if ($remoteId) {
-                    $localData['id'] = $remoteId;
-                }
-                $lokasi = Lokasi::create($localData);
+                // Buat juga di database lokal jika aktif
+                $lokasi = null;
+                try {
+                    $localData = $data;
+                    if ($remoteId) {
+                        $localData['id'] = $remoteId;
+                    }
+                    $lokasi = Lokasi::create($localData);
 
-                // Inisialisasi online monitoring untuk lokasi ini
-                OnlineMonitoring::firstOrCreate(
-                    ['lokasi_id' => $lokasi->id],
-                    [
-                        'jaringan' => '192.168.' . ($lokasi->id * 10) . '.1 / DHCP Network',
-                        'first_monitored_at' => Carbon::now(),
-                    ]
-                );
+                    // Inisialisasi online monitoring untuk lokasi ini
+                    OnlineMonitoring::firstOrCreate(
+                        ['lokasi_id' => $lokasi->id],
+                        [
+                            'jaringan' => '192.168.' . ($lokasi->id * 10) . '.1 / DHCP Network',
+                            'first_monitored_at' => Carbon::now(),
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    // DB offline, buat objek lokal virtual
+                    $lokasi = (object) array_merge($data, ['id' => $remoteId]);
+                }
 
                 return [
                     'success' => true,
@@ -146,16 +152,20 @@ class RemoteLokasiService
             $json = $response->json();
 
             if ($response->successful() && (!isset($json['success']) || $json['success'] === true)) {
-                // Perbarui juga di database lokal
-                $lokasi = Lokasi::find($id);
-                if ($lokasi) {
-                    $lokasi->update($data);
+                // Perbarui juga di database lokal jika ada
+                try {
+                    $lokasi = Lokasi::find($id);
+                    if ($lokasi) {
+                        $lokasi->update($data);
+                    }
+                } catch (\Throwable $e) {
+                    // DB offline
                 }
 
                 return [
                     'success' => true,
                     'message' => $json['message'] ?? 'Lokasi berhasil diperbarui di database domain!',
-                    'data' => $lokasi,
+                    'data' => (object) array_merge($data, ['id' => $id]),
                 ];
             }
 
@@ -181,10 +191,14 @@ class RemoteLokasiService
             $json = $response->json();
 
             if ($response->successful() && (!isset($json['success']) || $json['success'] === true)) {
-                // Hapus dari database lokal
-                $lokasi = Lokasi::find($id);
-                if ($lokasi) {
-                    $lokasi->delete();
+                // Hapus dari database lokal jika ada
+                try {
+                    $lokasi = Lokasi::find($id);
+                    if ($lokasi) {
+                        $lokasi->delete();
+                    }
+                } catch (\Throwable $e) {
+                    // DB offline
                 }
 
                 return [
@@ -212,41 +226,45 @@ class RemoteLokasiService
             return;
         }
 
-        foreach ($items as $item) {
-            if (empty($item['id'])) {
-                continue;
-            }
-
-            $id = (int) $item['id'];
-            $lokasi = Lokasi::find($id);
-
-            $attributes = [
-                'nama_lokasi' => $item['nama_lokasi'] ?? '',
-                'keterangan_alamat' => $item['keterangan_alamat'] ?? null,
-                'batas_waktu_henti' => (int) ($item['batas_waktu_henti'] ?? 60),
-            ];
-
-            if (!$lokasi) {
-                $attributes['id'] = $id;
-                if (!empty($item['uuid_lokasi'])) {
-                    $attributes['uuid_lokasi'] = $item['uuid_lokasi'];
+        try {
+            foreach ($items as $item) {
+                if (empty($item['id'])) {
+                    continue;
                 }
-                if (!empty($item['api_lokasi'])) {
-                    $attributes['api_lokasi'] = $item['api_lokasi'];
-                }
-                $lokasi = Lokasi::create($attributes);
-            } else {
-                $lokasi->update($attributes);
-            }
 
-            // Pastikan entri online monitoring selalu tersedia untuk relasi dashboard
-            OnlineMonitoring::firstOrCreate(
-                ['lokasi_id' => $lokasi->id],
-                [
-                    'jaringan' => '192.168.' . ($lokasi->id * 10) . '.1 / DHCP Network',
-                    'first_monitored_at' => Carbon::now(),
-                ]
-            );
+                $id = (int) $item['id'];
+                $lokasi = Lokasi::find($id);
+
+                $attributes = [
+                    'nama_lokasi' => $item['nama_lokasi'] ?? '',
+                    'keterangan_alamat' => $item['keterangan_alamat'] ?? null,
+                    'batas_waktu_henti' => (int) ($item['batas_waktu_henti'] ?? 60),
+                ];
+
+                if (!$lokasi) {
+                    $attributes['id'] = $id;
+                    if (!empty($item['uuid_lokasi'])) {
+                        $attributes['uuid_lokasi'] = $item['uuid_lokasi'];
+                    }
+                    if (!empty($item['api_lokasi'])) {
+                        $attributes['api_lokasi'] = $item['api_lokasi'];
+                    }
+                    $lokasi = Lokasi::create($attributes);
+                } else {
+                    $lokasi->update($attributes);
+                }
+
+                // Pastikan entri online monitoring selalu tersedia untuk relasi dashboard
+                OnlineMonitoring::firstOrCreate(
+                    ['lokasi_id' => $lokasi->id],
+                    [
+                        'jaringan' => '192.168.' . ($lokasi->id * 10) . '.1 / DHCP Network',
+                        'first_monitored_at' => Carbon::now(),
+                    ]
+                );
+            }
+        } catch (\Throwable $e) {
+            // Database lokal tidak terhubung / offline, abaikan sinkronisasi
         }
     }
 
@@ -259,25 +277,32 @@ class RemoteLokasiService
      */
     protected function fallbackLocal(?string $search, string $message): array
     {
-        $query = Lokasi::orderBy('id', 'asc');
+        $lokasis = [];
 
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_lokasi', 'LIKE', "%{$search}%")
-                  ->orWhere('keterangan_alamat', 'LIKE', "%{$search}%");
-            });
+        try {
+            $query = Lokasi::orderBy('id', 'asc');
+
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_lokasi', 'LIKE', "%{$search}%")
+                      ->orWhere('keterangan_alamat', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $lokasis = $query->get()->map(function ($loc) {
+                return [
+                    'id' => $loc->id,
+                    'nama_lokasi' => $loc->nama_lokasi,
+                    'uuid_lokasi' => $loc->uuid_lokasi,
+                    'api_lokasi' => $loc->api_lokasi,
+                    'keterangan_alamat' => $loc->keterangan_alamat ?: '-',
+                    'batas_waktu_henti' => (int) $loc->batas_waktu_henti,
+                ];
+            })->toArray();
+        } catch (\Throwable $e) {
+            // Database lokal offline
+            $lokasis = config('monitoring.default_locations', []);
         }
-
-        $lokasis = $query->get()->map(function ($loc) {
-            return [
-                'id' => $loc->id,
-                'nama_lokasi' => $loc->nama_lokasi,
-                'uuid_lokasi' => $loc->uuid_lokasi,
-                'api_lokasi' => $loc->api_lokasi,
-                'keterangan_alamat' => $loc->keterangan_alamat ?: '-',
-                'batas_waktu_henti' => (int) $loc->batas_waktu_henti,
-            ];
-        })->toArray();
 
         return [
             'success' => true,

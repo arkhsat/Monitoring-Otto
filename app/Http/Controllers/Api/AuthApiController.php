@@ -43,17 +43,41 @@ class AuthApiController extends Controller
         $password = $request->input('password');
         $remember = $request->boolean('remember');
 
-        // 1. Cek autentikasi di database lokal terlebih dahulu
-        $user = User::where('username', $loginInput)
-            ->orWhere('email', $loginInput)
-            ->orWhere('name', $loginInput)
-            ->first();
+        // 1. Cek autentikasi di database lokal terlebih dahulu (jika database aktif)
+        $user = null;
+        try {
+            $user = User::where('username', $loginInput)
+                ->orWhere('email', $loginInput)
+                ->orWhere('name', $loginInput)
+                ->first();
+        } catch (\Throwable $e) {
+            // Database lokal tidak terhubung / tidak aktif
+            $user = null;
+        }
 
         if ($user && Hash::check($password, $user->password)) {
-            $token = $user->createToken('auth-token')->plainTextToken;
+            $token = 'local_' . bin2hex(random_bytes(24));
+            try {
+                $token = $user->createToken('auth-token')->plainTextToken;
+            } catch (\Throwable $e) {
+                // Sanctum token table offline
+            }
+
+            // Simpan info user ke session untuk fallback database-less
+            session([
+                'logged_user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'role' => $user->role ?? 'Admin',
+                ]
+            ]);
 
             // Login-kan session web
             Auth::login($user, $remember);
+            $request->session()->regenerate();
+            session()->save();
 
             return response()->json([
                 'success' => true,
@@ -77,19 +101,43 @@ class AuthApiController extends Controller
         if ($remoteAuth && !empty($remoteAuth['success']) && !empty($remoteAuth['user'])) {
             $remoteUser = $remoteAuth['user'];
 
-            // Sinkronkan akun dari domain ke database lokal
-            $user = User::updateOrCreate(
-                ['username' => $remoteUser['username'] ?? $loginInput],
-                [
-                    'name' => $remoteUser['name'] ?? $loginInput,
-                    'email' => $remoteUser['email'] ?? ($loginInput . '@domain.local'),
-                    'password' => Hash::make($password),
-                    'role' => $remoteUser['role'] ?? 'Admin',
-                ]
-            );
+            $userData = [
+                'id' => (int) ($remoteUser['id'] ?? 1),
+                'name' => $remoteUser['name'] ?? $loginInput,
+                'username' => $remoteUser['username'] ?? $loginInput,
+                'email' => $remoteUser['email'] ?? ($loginInput . '@domain.local'),
+                'role' => $remoteUser['role'] ?? 'Admin',
+            ];
 
-            $token = $user->createToken('auth-token')->plainTextToken;
-            Auth::login($user, $remember);
+            // Simpan identitas user ke sesi file (bisa bekerja 100% tanpa database lokal)
+            session(['logged_user' => $userData]);
+
+            $userModel = new User();
+            $userModel->forceFill($userData);
+            $userModel->exists = true;
+
+            $token = 'remote_' . bin2hex(random_bytes(24));
+
+            // Jika database lokal ada, coba sinkronkan
+            try {
+                $dbUser = User::updateOrCreate(
+                    ['username' => $userData['username']],
+                    [
+                        'name' => $userData['name'],
+                        'email' => $userData['email'],
+                        'password' => Hash::make($password),
+                        'role' => $userData['role'],
+                    ]
+                );
+                $token = $dbUser->createToken('auth-token')->plainTextToken;
+                $userModel = $dbUser;
+            } catch (\Throwable $e) {
+                // Database lokal offline / dimatikan, gunakan userModel in-memory
+            }
+
+            Auth::login($userModel, $remember);
+            $request->session()->regenerate();
+            session()->save();
 
             return response()->json([
                 'success' => true,
@@ -97,13 +145,7 @@ class AuthApiController extends Controller
                 'source' => 'remote_domain',
                 'token' => $token,
                 'token_type' => 'Bearer',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'role' => $user->role ?? 'Admin',
-                ],
+                'user' => $userData,
                 'redirect_url' => route('dashboard.main'),
             ]);
         }
@@ -165,7 +207,14 @@ class AuthApiController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $request->user() ?: Auth::user();
+
+        if (!$user && session()->has('logged_user')) {
+            $sessionUser = session('logged_user');
+            $user = new User();
+            $user->forceFill($sessionUser);
+            $user->exists = true;
+        }
 
         if (!$user) {
             return response()->json([
@@ -193,11 +242,16 @@ class AuthApiController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        if ($user) {
-            $user->currentAccessToken()->delete();
+        try {
+            $user = $request->user();
+            if ($user && method_exists($user, 'currentAccessToken')) {
+                $user->currentAccessToken()?->delete();
+            }
+        } catch (\Throwable $e) {
+            // Abaikan jika token table offline
         }
+
+        session()->forget('logged_user');
 
         if (Auth::check()) {
             Auth::logout();

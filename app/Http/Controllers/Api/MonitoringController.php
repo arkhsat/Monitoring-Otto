@@ -22,27 +22,34 @@ class MonitoringController extends Controller
         $month = $request->query('month');
         $year = $request->query('year');
 
-        $query = MonitoringData::where('Kode', $kode);
+        $records = collect([]);
 
-        if (!empty($startDate) && !empty($endDate)) {
-            $query->whereDate('Tanggal', '>=', $startDate)
-                  ->whereDate('Tanggal', '<=', $endDate);
-        } elseif (!empty($startDate)) {
-            $query->whereDate('Tanggal', '>=', $startDate);
-        } elseif (!empty($endDate)) {
-            $query->whereDate('Tanggal', '<=', $endDate);
-        } elseif (!empty($date)) {
-            $query->whereDate('Tanggal', $date);
-        } elseif (!empty($month) && !empty($year)) {
-            $query->whereYear('Tanggal', $year)
-                  ->whereMonth('Tanggal', $month);
-        } elseif (!empty($year)) {
-            $query->whereYear('Tanggal', $year);
-        } elseif (!empty($month)) {
-            $query->whereMonth('Tanggal', $month);
+        try {
+            $query = MonitoringData::where('Kode', $kode);
+
+            if (!empty($startDate) && !empty($endDate)) {
+                $query->whereDate('Tanggal', '>=', $startDate)
+                      ->whereDate('Tanggal', '<=', $endDate);
+            } elseif (!empty($startDate)) {
+                $query->whereDate('Tanggal', '>=', $startDate);
+            } elseif (!empty($endDate)) {
+                $query->whereDate('Tanggal', '<=', $endDate);
+            } elseif (!empty($date)) {
+                $query->whereDate('Tanggal', $date);
+            } elseif (!empty($month) && !empty($year)) {
+                $query->whereYear('Tanggal', $year)
+                      ->whereMonth('Tanggal', $month);
+            } elseif (!empty($year)) {
+                $query->whereYear('Tanggal', $year);
+            } elseif (!empty($month)) {
+                $query->whereMonth('Tanggal', $month);
+            }
+
+            $records = $query->orderBy('Tanggal', 'desc')->get();
+        } catch (\Throwable $e) {
+            // Database lokal offline / tabel tidak ada
+            $records = collect([]);
         }
-
-        $records = $query->orderBy('Tanggal', 'desc')->get();
 
         return response()->json([
             'success' => true,
@@ -56,26 +63,59 @@ class MonitoringController extends Controller
      */
     public function lokasi()
     {
-        $dbLocations = Lokasi::orderBy('id', 'asc')->get();
+        try {
+            $dbLocations = Lokasi::orderBy('id', 'asc')->get();
 
-        if ($dbLocations->isNotEmpty()) {
-            $locations = $dbLocations->map(function ($loc) {
-                return [
-                    'id' => $loc->id,
-                    'kode' => $loc->id,
-                    'name' => $loc->nama_lokasi,
-                    'address' => $loc->keterangan_alamat ?: '-',
-                    'batas_waktu_henti' => $loc->batas_waktu_henti ?? 60,
-                ];
-            })->toArray();
-        } else {
-            $locations = config('monitoring.default_locations', []);
+            if ($dbLocations->isNotEmpty()) {
+                $locations = $dbLocations->map(function ($loc) {
+                    return [
+                        'id' => $loc->id,
+                        'kode' => $loc->id,
+                        'name' => $loc->nama_lokasi,
+                        'address' => $loc->keterangan_alamat ?: '-',
+                        'batas_waktu_henti' => $loc->batas_waktu_henti ?? 60,
+                    ];
+                })->toArray();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Daftar Lokasi Berhasil Diambil',
+                    'data'    => $locations,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // DB offline
+        }
+
+        // Ambil dari Remote Lokasi jika DB lokal offline
+        try {
+            $remoteService = app(\App\Services\RemoteLokasiService::class);
+            $remoteData = $remoteService->getAll();
+            if (!empty($remoteData['data'])) {
+                $locations = array_map(function ($loc) {
+                    return [
+                        'id' => (int) $loc['id'],
+                        'kode' => (int) $loc['id'],
+                        'name' => $loc['nama_lokasi'],
+                        'address' => $loc['keterangan_alamat'] ?: '-',
+                        'batas_waktu_henti' => (int) ($loc['batas_waktu_henti'] ?? 60),
+                    ];
+                }, $remoteData['data']);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Daftar Lokasi Berhasil Diambil dari API domain',
+                    'data'    => $locations,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            //
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Daftar Lokasi Berhasil Diambil',
-            'data'    => $locations,
+            'data'    => config('monitoring.default_locations', []),
         ]);
     }
 }
