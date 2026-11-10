@@ -31,7 +31,7 @@
                     </span>
                 </h2>
                 <p class="text-xs md:text-sm text-slate-500">
-                    Kelola data master lokasi onsite, UUID, dan API Key lokasi (tersimpan otomatis dalam bentuk Hash via RESTful API)
+                    Kelola data master lokasi
                 </p>
             </div>
 
