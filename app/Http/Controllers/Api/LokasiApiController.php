@@ -6,51 +6,42 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LokasiRequest;
 use App\Http\Resources\LokasiResource;
 use App\Models\Lokasi;
-use App\Models\OnlineMonitoring;
-use Carbon\Carbon;
+use App\Services\RemoteLokasiService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LokasiApiController extends Controller
 {
+    protected RemoteLokasiService $remoteService;
+
+    public function __construct(RemoteLokasiService $remoteService)
+    {
+        $this->remoteService = $remoteService;
+    }
+
     /**
      * Display a listing of locations with optional search filter.
+     * Connects to Remote RESTful API on domain, with local sync.
      *
      * GET /api/lokasi
      */
     public function index(Request $request): JsonResponse
     {
-        try {
-            $search = $request->query('search');
+        $search = $request->query('search');
+        $result = $this->remoteService->getAll($search);
 
-            $query = Lokasi::orderBy('id', 'asc');
-
-            if (!empty($search)) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama_lokasi', 'LIKE', "%{$search}%")
-                      ->orWhere('keterangan_alamat', 'LIKE', "%{$search}%");
-                });
-            }
-
-            $lokasis = $query->get();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Daftar lokasi berhasil diambil',
-                'total' => $lokasis->count(),
-                'data' => LokasiResource::collection($lokasis),
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data lokasi: ' . $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => $result['success'],
+            'message' => $result['message'],
+            'source'  => $result['source'] ?? 'remote',
+            'total'   => count($result['data']),
+            'data'    => $result['data'],
+        ]);
     }
 
     /**
-     * Store a newly created location.
+     * Store a newly created location on remote domain API.
      *
      * POST /api/lokasi
      */
@@ -59,7 +50,7 @@ class LokasiApiController extends Controller
         try {
             $validated = $request->validated();
 
-            // Let booted / cast handle empty uuid_lokasi and hashing
+            // Biarkan kosong jika tidak diinput
             if (empty($validated['uuid_lokasi'])) {
                 unset($validated['uuid_lokasi']);
             }
@@ -67,21 +58,12 @@ class LokasiApiController extends Controller
                 unset($validated['api_lokasi']);
             }
 
-            $lokasi = Lokasi::create($validated);
-
-            // Auto-initialize monitoring record for this location
-            OnlineMonitoring::firstOrCreate(
-                ['lokasi_id' => $lokasi->id],
-                [
-                    'jaringan' => '192.168.' . ($lokasi->id * 10) . '.1 / DHCP Network',
-                    'first_monitored_at' => Carbon::now(),
-                ]
-            );
+            $result = $this->remoteService->create($validated);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Lokasi baru berhasil ditambahkan! UUID dan API Lokasi otomatis di-hash.',
-                'data' => new LokasiResource($lokasi),
+                'message' => $result['message'] ?? 'Lokasi baru berhasil ditambahkan ke database domain!',
+                'data' => $result['data'],
             ], 201);
         } catch (Exception $e) {
             return response()->json([
@@ -115,17 +97,15 @@ class LokasiApiController extends Controller
     }
 
     /**
-     * Update the specified location in storage.
+     * Update the specified location in storage on remote domain API.
      *
      * PUT/PATCH /api/lokasi/{id}
      */
     public function update(LokasiRequest $request, int $id): JsonResponse
     {
         try {
-            $lokasi = Lokasi::findOrFail($id);
             $validated = $request->validated();
 
-            // Do not overwrite existing hash if left blank
             if (empty($validated['uuid_lokasi'])) {
                 unset($validated['uuid_lokasi']);
             }
@@ -133,12 +113,12 @@ class LokasiApiController extends Controller
                 unset($validated['api_lokasi']);
             }
 
-            $lokasi->update($validated);
+            $result = $this->remoteService->update($id, $validated);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Lokasi berhasil diperbarui!',
-                'data' => new LokasiResource($lokasi),
+                'message' => $result['message'] ?? 'Lokasi berhasil diperbarui di database domain!',
+                'data' => $result['data'],
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -149,19 +129,18 @@ class LokasiApiController extends Controller
     }
 
     /**
-     * Remove the specified location from storage.
+     * Remove the specified location from remote domain API.
      *
      * DELETE /api/lokasi/{id}
      */
     public function destroy(int $id): JsonResponse
     {
         try {
-            $lokasi = Lokasi::findOrFail($id);
-            $lokasi->delete();
+            $result = $this->remoteService->delete($id);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Lokasi berhasil dihapus!',
+                'message' => $result['message'] ?? 'Lokasi berhasil dihapus dari database domain!',
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -171,4 +150,3 @@ class LokasiApiController extends Controller
         }
     }
 }
-
