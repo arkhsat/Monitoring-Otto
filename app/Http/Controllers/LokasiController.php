@@ -23,10 +23,13 @@ class LokasiController extends Controller
      */
     public function index(): View
     {
-        // Sinkronkan data dari API domain terlebih dahulu
-        $this->remoteService->getAll();
+        // Ambil data lokasi langsung dari API domain remote
+        $result = $this->remoteService->getAll();
+        $items = $result['data'] ?? [];
 
-        $lokasis = Lokasi::orderBy('id', 'asc')->get();
+        $lokasis = collect($items)->map(function ($item) {
+            return (object) $item;
+        });
 
         return view('pages.lokasi.index', compact('lokasis'));
     }

@@ -15,18 +15,41 @@ class LocationService
      */
     public function getLocations(): array
     {
-        $dbLocations = Lokasi::orderBy('id', 'asc')->get();
+        // 1. Coba ambil dari database lokal jika database aktif
+        try {
+            $dbLocations = Lokasi::orderBy('id', 'asc')->get();
+            if ($dbLocations->isNotEmpty()) {
+                return $dbLocations->map(function ($loc) {
+                    return [
+                        'id' => $loc->id,
+                        'kode' => $loc->id,
+                        'name' => $loc->nama_lokasi,
+                        'address' => $loc->keterangan_alamat ?: '-',
+                        'batas_waktu_henti' => $loc->batas_waktu_henti ?? 60,
+                    ];
+                })->toArray();
+            }
+        } catch (\Throwable $e) {
+            // Database lokal offline / tidak ada
+        }
 
-        if ($dbLocations->isNotEmpty()) {
-            return $dbLocations->map(function ($loc) {
-                return [
-                    'id' => $loc->id,
-                    'kode' => $loc->id,
-                    'name' => $loc->nama_lokasi,
-                    'address' => $loc->keterangan_alamat ?: '-',
-                    'batas_waktu_henti' => $loc->batas_waktu_henti ?? 60,
-                ];
-            })->toArray();
+        // 2. Ambil langsung dari Remote RESTful API domain
+        try {
+            $remoteService = app(RemoteLokasiService::class);
+            $remoteData = $remoteService->getAll();
+            if (!empty($remoteData['data'])) {
+                return array_map(function ($loc) {
+                    return [
+                        'id' => (int) $loc['id'],
+                        'kode' => (int) $loc['id'],
+                        'name' => $loc['nama_lokasi'],
+                        'address' => $loc['keterangan_alamat'] ?: '-',
+                        'batas_waktu_henti' => (int) ($loc['batas_waktu_henti'] ?? 60),
+                    ];
+                }, $remoteData['data']);
+            }
+        } catch (\Throwable $e) {
+            //
         }
 
         return config('monitoring.default_locations', []);
@@ -110,13 +133,18 @@ class LocationService
             $query->whereMonth('Tanggal', $month);
         }
 
-        $rawRecords = $query->orderBy('Tanggal', 'desc')->get();
+        try {
+            $rawRecords = $query->orderBy('Tanggal', 'desc')->get();
 
-        $records = [];
-        foreach ($rawRecords as $row) {
-            $records[] = $this->formatRecord($row);
+            $records = [];
+            foreach ($rawRecords as $row) {
+                $records[] = $this->formatRecord($row);
+            }
+
+            return $records;
+        } catch (\Throwable $e) {
+            // Database lokal offline / tabel data tidak ada
+            return [];
         }
-
-        return $records;
     }
 }

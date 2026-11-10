@@ -7,8 +7,10 @@ use App\Http\Controllers\Api\OnlineMonitoringApiController;
 use App\Http\Controllers\Api\LokasiApiController;
 use App\Http\Controllers\Api\AuthApiController;
 
-// Public Authentication API
-Route::post('/login', [AuthApiController::class, 'login'])->name('api.login');
+// Public Authentication API (menggunakan middleware web agar session cookie tersimpan di browser)
+Route::middleware('web')->group(function () {
+    Route::post('/login', [AuthApiController::class, 'login'])->name('api.login');
+});
 
 // Protected User APIs
 Route::middleware('auth:sanctum')->group(function () {

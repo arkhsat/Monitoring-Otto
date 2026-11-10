@@ -48,7 +48,7 @@
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
                 try {
-                    const response = await fetch('/api/login', {
+                    const response = await fetch('{{ route("login.post") }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -56,6 +56,7 @@
                             'X-Requested-With': 'XMLHttpRequest',
                             'X-CSRF-TOKEN': csrfToken || ''
                         },
+                        credentials: 'same-origin',
                         body: JSON.stringify({ username, password, remember })
                     });
 
