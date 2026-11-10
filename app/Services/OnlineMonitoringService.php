@@ -7,6 +7,8 @@ use App\Models\OnlineMonitoring;
 use App\Models\OnlineMonitoringHistory;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class OnlineMonitoringService
 {
@@ -18,18 +20,40 @@ class OnlineMonitoringService
     public const FULL_PERIOD_SECONDS = 86400;        // 24 hours
 
     /**
-     * Determine network status from last update timestamp relative to server time.
-     *
-     * Rules:
-     * - Online: last update < 5 minutes (300 seconds)
-     * - Gangguan: 5 minutes <= last update < 10 minutes (300 - 599 seconds)
-     * - Offline: last update >= 10 minutes (>= 600 seconds) or null
-     *
-     * @param Carbon|null $lastUpdate
-     * @param Carbon|null $serverNow
-     * @return array{status: string, code: string, diff_seconds: int|null}
+     * Dapatkan konfigurasi URL dan Token untuk Remote API
      */
-    public function calculateStatus(?Carbon $lastUpdate, ?Carbon $serverNow = null): array
+    protected function getApiConfig(): array
+    {
+        $baseUrl = rtrim((string) config('services.monitoring_api.base_url'), '/');
+        $token = (string) config('services.monitoring_api.token');
+        $endpoint = str_ends_with($baseUrl, '.php') ? $baseUrl : "{$baseUrl}/online_monitoring.php";
+
+        return [
+            'base_url' => $baseUrl,
+            'token' => $token,
+            'endpoint' => $endpoint,
+        ];
+    }
+
+    /**
+     * Helper client HTTP Laravel
+     */
+    protected function httpClient()
+    {
+        $config = $this->getApiConfig();
+
+        return Http::timeout(8)
+            ->withHeaders([
+                'Accept' => 'application/json',
+                'Authorization' => "Bearer {$config['token']}",
+                'X-API-TOKEN' => $config['token'],
+            ]);
+    }
+
+    /**
+     * Determine network status from last update timestamp relative to server time and threshold.
+     */
+    public function calculateStatus(?Carbon $lastUpdate, ?Carbon $serverNow = null, int $thresholdSeconds = 60): array
     {
         $serverNow = $serverNow ?: Carbon::now();
 
@@ -41,203 +65,108 @@ class OnlineMonitoringService
             ];
         }
 
-        $diffSeconds = $lastUpdate->diffInSeconds($serverNow, false);
+        $diffSeconds = (int) $lastUpdate->diffInSeconds($serverNow, false);
         if ($diffSeconds < 0) {
             $diffSeconds = 0;
         }
 
-        if ($diffSeconds < self::ONLINE_THRESHOLD_SECONDS) {
+        $threshold = $thresholdSeconds > 0 ? $thresholdSeconds : 60;
+
+        if ($diffSeconds <= $threshold) {
             return [
                 'status' => 'Online',
                 'code' => 'online',
-                'diff_seconds' => (int) $diffSeconds,
+                'diff_seconds' => $diffSeconds,
             ];
         }
 
-        if ($diffSeconds < self::GANGGUAN_THRESHOLD_SECONDS) {
+        if ($diffSeconds <= self::GANGGUAN_THRESHOLD_SECONDS && $threshold < self::GANGGUAN_THRESHOLD_SECONDS) {
             return [
                 'status' => 'Gangguan',
                 'code' => 'gangguan',
-                'diff_seconds' => (int) $diffSeconds,
+                'diff_seconds' => $diffSeconds,
             ];
         }
 
         return [
             'status' => 'Offline',
             'code' => 'offline',
-            'diff_seconds' => (int) $diffSeconds,
+            'diff_seconds' => $diffSeconds,
         ];
     }
 
     /**
-     * Calculate 24-hour downtime and uptime using interval union.
-     *
-     * Concept: Downtime = 24 Hours - Total Uptime
-     * Accurately merges overlapping intervals, factors active outages,
-     * and accounts for incomplete monitoring periods.
-     *
-     * @param OnlineMonitoring|null $device
-     * @param Carbon|null $serverNow
-     * @return array{
-     *   downtime_seconds: int,
-     *   uptime_seconds: int,
-     *   downtime_formatted: string,
-     *   uptime_percentage: float,
-     *   downtime_percentage: float,
-     *   monitored_period_seconds: int,
-     *   is_incomplete_period: bool,
-     *   monitored_hours: float
-     * }
+     * Calculate downtime variable: time now - last online time.
+     * RESET SETIAP JAM 00:00 (Dihitung per hari berjalan mulai dari 00:00:00).
      */
-    public function calculateDowntime(?OnlineMonitoring $device, ?Carbon $serverNow = null): array
+    public function calculateDowntime(?OnlineMonitoring $device, ?Carbon $serverNow = null, int $thresholdSeconds = 60): array
     {
         $serverNow = $serverNow ?: Carbon::now();
-        $windowStart = $serverNow->copy()->subHours(24);
-        $windowEnd = $serverNow->copy();
+        $lastUpdate = $device?->last_update;
+        $threshold = $thresholdSeconds > 0 ? $thresholdSeconds : 60;
 
-        if (!$device) {
+        // Reset harian: Periode dimulai dari jam 00:00:00 hari ini
+        $startOfDay = $serverNow->copy()->startOfDay();
+        $elapsedToday = max(1, (int) $startOfDay->diffInSeconds($serverNow));
+
+        if (!$device || !$lastUpdate) {
             return [
-                'downtime_seconds' => self::FULL_PERIOD_SECONDS,
+                'downtime_seconds' => $elapsedToday,
                 'uptime_seconds' => 0,
-                'downtime_formatted' => '24h 0m (100%)',
+                'downtime_formatted' => $this->formatDuration($elapsedToday) . ' (100%)',
                 'uptime_percentage' => 0.0,
                 'downtime_percentage' => 100.0,
-                'monitored_period_seconds' => self::FULL_PERIOD_SECONDS,
+                'monitored_period_seconds' => $elapsedToday,
                 'is_incomplete_period' => false,
-                'monitored_hours' => 24.0,
+                'monitored_hours' => round($elapsedToday / 3600, 1),
             ];
         }
 
-        // Determine effective monitoring period for this device
-        $firstMonitored = $device->first_monitored_at ?: $device->created_at ?: $windowStart;
-        if ($firstMonitored->gt($windowStart)) {
-            $effectiveStart = $firstMonitored->copy();
-            $monitoredSeconds = max(1, $windowEnd->diffInSeconds($effectiveStart));
-            $monitoredSeconds = min(self::FULL_PERIOD_SECONDS, $monitoredSeconds);
-            $isIncomplete = true;
+        $diffSeconds = (int) max(0, $lastUpdate->diffInSeconds($serverNow, false));
+
+        // Jika Online (masih di dalam batas waktu henti)
+        if ($diffSeconds <= $threshold) {
+            return [
+                'downtime_seconds' => 0,
+                'uptime_seconds' => $elapsedToday,
+                'downtime_formatted' => '0m (0%)',
+                'uptime_percentage' => 100.0,
+                'downtime_percentage' => 0.0,
+                'monitored_period_seconds' => $elapsedToday,
+                'is_incomplete_period' => false,
+                'monitored_hours' => round($elapsedToday / 3600, 1),
+            ];
+        }
+
+        // Tentukan titik mulai offline
+        $downtimeStart = $lastUpdate->copy()->addSeconds($threshold);
+
+        // Jika offline terjadi sebelum jam 00:00 hari ini, maka downtime hari ini dihitung sejak jam 00:00 (reset)
+        if ($downtimeStart->lt($startOfDay)) {
+            $downtimeToday = $elapsedToday;
         } else {
-            $effectiveStart = $windowStart->copy();
-            $monitoredSeconds = self::FULL_PERIOD_SECONDS;
-            $isIncomplete = false;
+            $downtimeToday = max(0, min($elapsedToday, (int) $downtimeStart->diffInSeconds($serverNow)));
         }
 
-        // 1. Gather historical outage intervals within effective period
-        $histories = OnlineMonitoringHistory::where('online_monitoring_id', $device->id)
-            ->whereNotNull('downtime_start')
-            ->where(function ($query) use ($effectiveStart) {
-                $query->whereNull('downtime_end')
-                      ->orWhere('downtime_end', '>=', $effectiveStart);
-            })
-            ->where('downtime_start', '<=', $windowEnd)
-            ->get();
-
-        $rawIntervals = [];
-
-        foreach ($histories as $history) {
-            $start = $history->downtime_start->copy();
-            $end = $history->downtime_end ? $history->downtime_end->copy() : $windowEnd->copy();
-
-            // Clip interval to effective window
-            $clippedStart = $start->lt($effectiveStart) ? $effectiveStart->timestamp : $start->timestamp;
-            $clippedEnd = $end->gt($windowEnd) ? $windowEnd->timestamp : $end->timestamp;
-
-            if ($clippedEnd > $clippedStart) {
-                $rawIntervals[] = [
-                    'start' => $clippedStart,
-                    'end' => $clippedEnd,
-                ];
-            }
-        }
-
-        // 2. Add ongoing outage if device is currently Gangguan or Offline
-        $currentStatus = $this->calculateStatus($device->last_update, $serverNow);
-        if ($currentStatus['code'] !== 'online') {
-            if ($device->last_update) {
-                // Outage started when it exceeded the 5-minute threshold
-                $ongoingStart = $device->last_update->copy()->addSeconds(self::ONLINE_THRESHOLD_SECONDS);
-            } else {
-                // Never updated, down for entire effective monitored period
-                $ongoingStart = $effectiveStart->copy();
-            }
-
-            $clippedStart = $ongoingStart->lt($effectiveStart) ? $effectiveStart->timestamp : $ongoingStart->timestamp;
-            $clippedEnd = $windowEnd->timestamp;
-
-            if ($clippedEnd > $clippedStart) {
-                $rawIntervals[] = [
-                    'start' => $clippedStart,
-                    'end' => $clippedEnd,
-                ];
-            }
-        }
-
-        // 3. Interval Union Algorithm (merge overlapping/contiguous intervals)
-        $mergedIntervals = $this->mergeIntervals($rawIntervals);
-
-        $totalDowntimeSeconds = 0;
-        foreach ($mergedIntervals as $interval) {
-            $totalDowntimeSeconds += ($interval['end'] - $interval['start']);
-        }
-
-        // Bound downtime to monitored period
-        $totalDowntimeSeconds = min($monitoredSeconds, max(0, $totalDowntimeSeconds));
-        $totalUptimeSeconds = max(0, $monitoredSeconds - $totalDowntimeSeconds);
-
-        $uptimePct = $monitoredSeconds > 0 ? round(($totalUptimeSeconds / $monitoredSeconds) * 100, 1) : 0.0;
-        $downtimePct = $monitoredSeconds > 0 ? round(($totalDowntimeSeconds / $monitoredSeconds) * 100, 1) : 0.0;
-
-        $downtimeFormatted = $this->formatDuration($totalDowntimeSeconds) . " ({$downtimePct}%)";
+        $uptimeToday = max(0, $elapsedToday - $downtimeToday);
+        $uptimePct = round(($uptimeToday / $elapsedToday) * 100, 1);
+        $downtimePct = round(($downtimeToday / $elapsedToday) * 100, 1);
+        $downtimeFormatted = $this->formatDuration($downtimeToday) . " ({$downtimePct}%)";
 
         return [
-            'downtime_seconds' => $totalDowntimeSeconds,
-            'uptime_seconds' => $totalUptimeSeconds,
+            'downtime_seconds' => $downtimeToday,
+            'uptime_seconds' => $uptimeToday,
             'downtime_formatted' => $downtimeFormatted,
             'uptime_percentage' => $uptimePct,
             'downtime_percentage' => $downtimePct,
-            'monitored_period_seconds' => $monitoredSeconds,
-            'is_incomplete_period' => $isIncomplete,
-            'monitored_hours' => round($monitoredSeconds / 3600, 1),
+            'monitored_period_seconds' => $elapsedToday,
+            'is_incomplete_period' => false,
+            'monitored_hours' => round($elapsedToday / 3600, 1),
         ];
-    }
-
-    /**
-     * Merge overlapping or adjacent timestamp intervals.
-     *
-     * @param array<int, array{start: int, end: int}> $intervals
-     * @return array<int, array{start: int, end: int}>
-     */
-    protected function mergeIntervals(array $intervals): array
-    {
-        if (empty($intervals)) {
-            return [];
-        }
-
-        usort($intervals, function ($a, $b) {
-            return $a['start'] <=> $b['start'];
-        });
-
-        $merged = [];
-        foreach ($intervals as $interval) {
-            if (empty($merged)) {
-                $merged[] = $interval;
-            } else {
-                $lastIndex = count($merged) - 1;
-                if ($interval['start'] <= $merged[$lastIndex]['end']) {
-                    $merged[$lastIndex]['end'] = max($merged[$lastIndex]['end'], $interval['end']);
-                } else {
-                    $merged[] = $interval;
-                }
-            }
-        }
-
-        return $merged;
     }
 
     /**
      * Format seconds into readable duration string (e.g. 0m, 25m, 2h 10m).
-     *
-     * @param int $seconds
-     * @return string
      */
     public function formatDuration(int $seconds): string
     {
@@ -257,14 +186,49 @@ class OnlineMonitoringService
 
     /**
      * Retrieve all online monitoring data with calculated status and downtime.
-     *
-     * @return array{
-     *   items: array<int, array<string, mixed>>,
-     *   summary: array{total_locations: int, online: int, gangguan: int, offline: int},
-     *   server_time: string
-     * }
+     * Mengambil dari RESTful API domain remote terlebih dahulu, lalu sinkronkan ke DB lokal.
      */
     public function getAllMonitoringData(): array
+    {
+        $config = $this->getApiConfig();
+
+        // 1. Ambil dari Remote RESTful API domain
+        try {
+            $response = $this->httpClient()->get($config['endpoint']);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                if (!empty($json['success']) && isset($json['data'])) {
+                    $items = $json['data'];
+
+                    // Sinkronkan ke database lokal
+                    $this->syncRemoteMonitoringToLocal($items);
+
+                    return [
+                        'items' => $items,
+                        'summary' => $json['summary'] ?? [
+                            'total_locations' => count($items),
+                            'online' => 0,
+                            'gangguan' => 0,
+                            'offline' => 0,
+                        ],
+                        'server_time' => $json['server_time'] ?? Carbon::now()->toIso8601String(),
+                        'source' => 'remote',
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Remote Online Monitoring API failed: " . $e->getMessage() . ". Using local fallback.");
+        }
+
+        // 2. Fallback ke database lokal jika remote API belum merespons
+        return $this->getLocalMonitoringData();
+    }
+
+    /**
+     * Fallback lokal untuk getAllMonitoringData (dengan reset downtime harian 00:00)
+     */
+    protected function getLocalMonitoringData(): array
     {
         $serverNow = Carbon::now();
         $locations = Lokasi::with('onlineMonitoring')->orderBy('id', 'asc')->get();
@@ -277,9 +241,13 @@ class OnlineMonitoringService
         foreach ($locations as $lokasi) {
             $device = $lokasi->onlineMonitoring;
             $lastUpdate = $device?->last_update;
+            $threshold = (int) ($lokasi->batas_waktu_henti ?? 60);
+            if ($threshold <= 0) {
+                $threshold = 60;
+            }
 
-            $statusData = $this->calculateStatus($lastUpdate, $serverNow);
-            $downtimeData = $this->calculateDowntime($device, $serverNow);
+            $statusData = $this->calculateStatus($lastUpdate, $serverNow, $threshold);
+            $downtimeData = $this->calculateDowntime($device, $serverNow, $threshold);
 
             if ($statusData['code'] === 'online') {
                 $countOnline++;
@@ -289,7 +257,6 @@ class OnlineMonitoringService
                 $countOffline++;
             }
 
-            // Format last update timestamps (Dual indicator: absolute + relative)
             $lastUpdateAbsolute = '-';
             $lastUpdateRelative = 'Belum pernah update';
             $lastUpdateIso = null;
@@ -308,7 +275,7 @@ class OnlineMonitoringService
                 'lokasi_id' => $lokasi->id,
                 'location' => $lokasi->nama_lokasi,
                 'address' => $lokasi->keterangan_alamat ?: '-',
-                'network' => $device?->jaringan ?: '-',
+                'network' => $device?->jaringan ?: 'Dynamic / DHCP Network',
                 'ip_address' => $device?->ip_address,
                 'status' => $statusData['status'],
                 'status_code' => $statusData['code'],
@@ -322,7 +289,7 @@ class OnlineMonitoringService
                 'uptime_percentage' => $downtimeData['uptime_percentage'],
                 'downtime_percentage' => $downtimeData['downtime_percentage'],
                 'monitored_period_seconds' => $downtimeData['monitored_period_seconds'],
-                'is_incomplete_period' => $downtimeData['is_incomplete_period'],
+                'is_incomplete_period' => false,
                 'monitored_hours' => $downtimeData['monitored_hours'],
             ];
         }
@@ -338,46 +305,64 @@ class OnlineMonitoringService
             'items' => $items,
             'summary' => $summary,
             'server_time' => $serverNow->toIso8601String(),
+            'source' => 'local_fallback',
         ];
     }
 
     /**
+     * Sinkronkan data monitoring dari remote API ke database lokal
+     */
+    protected function syncRemoteMonitoringToLocal(array $items): void
+    {
+        foreach ($items as $item) {
+            $lokasiId = $item['lokasi_id'] ?? null;
+            if (!$lokasiId) continue;
+
+            $device = OnlineMonitoring::firstOrNew(['lokasi_id' => $lokasiId]);
+            $device->jaringan = $item['network'] ?? ($device->jaringan ?: 'Dynamic / DHCP Network');
+            if (isset($item['ip_address'])) {
+                $device->ip_address = $item['ip_address'];
+            }
+            $device->status = $item['status'] ?? 'Offline';
+            if (!empty($item['last_update'])) {
+                $device->last_update = Carbon::parse($item['last_update']);
+            }
+            $device->save();
+        }
+    }
+
+    /**
      * Get detailed monitoring state for a specific location.
-     *
-     * @param int $lokasiId
-     * @return array<string, mixed>
      */
     public function getLocationDetail(int $lokasiId): array
     {
+        $all = $this->getAllMonitoringData();
+        foreach ($all['items'] as $item) {
+            if ($item['lokasi_id'] == $lokasiId) {
+                return $item;
+            }
+        }
+
         $lokasi = Lokasi::with('onlineMonitoring')->findOrFail($lokasiId);
         $device = $lokasi->onlineMonitoring;
         $serverNow = Carbon::now();
+        $threshold = (int) ($lokasi->batas_waktu_henti ?? 60);
 
-        $statusData = $this->calculateStatus($device?->last_update, $serverNow);
-        $downtimeData = $this->calculateDowntime($device, $serverNow);
-
-        $lastUpdateAbsolute = '-';
-        $lastUpdateRelative = 'Belum pernah update';
-        $lastUpdateIso = null;
-
-        if ($device?->last_update) {
-            $lastUpdateIso = $device->last_update->toIso8601String();
-            $lastUpdateAbsolute = $device->last_update->locale('id')->isoFormat('D MMMM Y, HH:mm:ss');
-            $lastUpdateRelative = $device->last_update->locale('id')->diffForHumans($serverNow);
-        }
+        $statusData = $this->calculateStatus($device?->last_update, $serverNow, $threshold);
+        $downtimeData = $this->calculateDowntime($device, $serverNow, $threshold);
 
         return [
             'id' => $device?->id ?? $lokasi->id,
             'lokasi_id' => $lokasi->id,
             'location' => $lokasi->nama_lokasi,
             'address' => $lokasi->keterangan_alamat ?: '-',
-            'network' => $device?->jaringan ?: '-',
+            'network' => $device?->jaringan ?: 'Dynamic / DHCP Network',
             'ip_address' => $device?->ip_address,
             'status' => $statusData['status'],
             'status_code' => $statusData['code'],
-            'last_update' => $lastUpdateIso,
-            'last_update_absolute' => $lastUpdateAbsolute,
-            'last_update_relative' => $lastUpdateRelative,
+            'last_update' => $device?->last_update?->toIso8601String(),
+            'last_update_absolute' => $device?->last_update?->locale('id')->isoFormat('D MMMM Y, HH:mm:ss') ?: '-',
+            'last_update_relative' => $device?->last_update?->locale('id')->diffForHumans($serverNow) ?: 'Belum pernah update',
             'diff_seconds' => $statusData['diff_seconds'],
             'downtime_seconds' => $downtimeData['downtime_seconds'],
             'uptime_seconds' => $downtimeData['uptime_seconds'],
@@ -385,22 +370,59 @@ class OnlineMonitoringService
             'uptime_percentage' => $downtimeData['uptime_percentage'],
             'downtime_percentage' => $downtimeData['downtime_percentage'],
             'monitored_period_seconds' => $downtimeData['monitored_period_seconds'],
-            'is_incomplete_period' => $downtimeData['is_incomplete_period'],
+            'is_incomplete_period' => false,
             'monitored_hours' => $downtimeData['monitored_hours'],
         ];
     }
 
     /**
-     * Retrieve monitoring history logs for a location with optional date filtering.
-     *
-     * @param int $lokasiId
-     * @param string|null $date
-     * @param string|null $startDate
-     * @param string|null $endDate
-     * @param int $limit
-     * @return array<string, mixed>
+     * Retrieve monitoring history logs with optional date range filters.
+     * Mengambil dari remote API domain, dengan fallback ke lokal.
      */
     public function getLocationHistory(
+        int $lokasiId,
+        ?string $date = null,
+        ?string $startDate = null,
+        ?string $endDate = null,
+        int $limit = 50
+    ): array {
+        $config = $this->getApiConfig();
+
+        try {
+            $params = [
+                'action' => 'history',
+                'lokasi_id' => $lokasiId,
+                'limit' => $limit,
+            ];
+            if ($date) $params['date'] = $date;
+            if ($startDate) $params['start_date'] = $startDate;
+            if ($endDate) $params['end_date'] = $endDate;
+
+            $response = $this->httpClient()->get($config['endpoint'], $params);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                if (!empty($json['success']) && isset($json['records'])) {
+                    return [
+                        'location' => $json['location'],
+                        'metrics' => $json['metrics'],
+                        'records' => $json['records'],
+                        'source' => 'remote',
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Remote Location History API failed: " . $e->getMessage());
+        }
+
+        // Fallback local DB
+        return $this->getLocalLocationHistory($lokasiId, $date, $startDate, $endDate, $limit);
+    }
+
+    /**
+     * Fallback riwayat lokal
+     */
+    protected function getLocalLocationHistory(
         int $lokasiId,
         ?string $date = null,
         ?string $startDate = null,
@@ -427,8 +449,8 @@ class OnlineMonitoringService
 
         $totalDowntimeSeconds = 0;
         $totalIncidents = 0;
-
         $records = [];
+
         foreach ($histories as $h) {
             $totalDowntimeSeconds += (int) $h->duration_seconds;
             if (in_array(strtolower($h->current_status), ['gangguan', 'offline'])) {
@@ -455,10 +477,9 @@ class OnlineMonitoringService
             ];
         }
 
-        // Aggregated period metrics
         $periodSeconds = !empty($startDate) && !empty($endDate)
             ? max(86400, Carbon::parse($startDate)->diffInSeconds(Carbon::parse($endDate)->endOfDay()))
-            : (30 * 86400); // 30 days default context
+            : (30 * 86400);
 
         $uptimeSeconds = max(0, $periodSeconds - $totalDowntimeSeconds);
         $uptimePercentage = round(($uptimeSeconds / $periodSeconds) * 100, 1);
@@ -483,16 +504,7 @@ class OnlineMonitoringService
 
     /**
      * Ingest heartbeat/ping from an onsite device or automated probe.
-     *
-     * @param int $lokasiId
-     * @param array{
-     *   jaringan?: string|null,
-     *   ip_address?: string|null,
-     *   status?: string|null,
-     *   timestamp?: string|Carbon|null,
-     *   notes?: string|null
-     * } $data
-     * @return OnlineMonitoring
+     * Dicatat di lokal dan diteruskan ke remote API domain.
      */
     public function recordPing(int $lokasiId, array $data = []): OnlineMonitoring
     {
@@ -500,8 +512,8 @@ class OnlineMonitoringService
         $now = isset($data['timestamp']) ? Carbon::parse($data['timestamp']) : Carbon::now();
 
         $device = OnlineMonitoring::firstOrNew(['lokasi_id' => $lokasiId]);
-
-        $previousStatus = $this->calculateStatus($device->last_update, $now);
+        $threshold = (int) ($lokasi->batas_waktu_henti ?? 60);
+        $previousStatus = $this->calculateStatus($device->last_update, $now, $threshold);
 
         if (!$device->exists) {
             $device->first_monitored_at = $now;
@@ -517,13 +529,13 @@ class OnlineMonitoringService
             $device->ip_address = $data['ip_address'];
         }
 
+        $device->status = 'Online';
         $device->last_update = $now;
         $device->save();
 
-        // If previously down or troubled, record recovery event
         if ($previousStatus['code'] !== 'online' && $device->wasRecentlyCreated === false) {
             $downtimeStart = $device->last_update
-                ? $device->last_update->copy()->addSeconds(self::ONLINE_THRESHOLD_SECONDS)
+                ? $device->last_update->copy()->addSeconds($threshold)
                 : $now->copy()->subMinutes(10);
 
             $duration = max(0, $now->diffInSeconds($downtimeStart));
@@ -543,7 +555,126 @@ class OnlineMonitoringService
             ]);
         }
 
+        // Teruskan ping ke Remote API domain
+        try {
+            $config = $this->getApiConfig();
+            $this->httpClient()->post("{$config['endpoint']}?action=ping", array_merge($data, [
+                'lokasi_id' => $lokasiId,
+                'status' => 'Online',
+                'jaringan' => $device->jaringan,
+                'ip_address' => $device->ip_address,
+            ]));
+        } catch (\Throwable $e) {
+            Log::debug("Forwarding ping to remote API error: " . $e->getMessage());
+        }
+
         return $device;
     }
-}
 
+    /**
+     * CRON JOB: Pengecekan status Online/Offline berkala (setiap menit).
+     * Jika (now - last_update) > batas_waktu_henti, status langsung diubah menjadi Offline.
+     * Memicu cron di database domain dan menyinkronkannya ke lokal.
+     */
+    public function syncAllStatuses(): array
+    {
+        $config = $this->getApiConfig();
+        $remoteChanges = 0;
+
+        // 1. Eksekusi cron di remote database domain
+        try {
+            $response = $this->httpClient()->get("{$config['endpoint']}?action=cron");
+            if ($response->successful()) {
+                $remoteData = $response->json();
+                $remoteChanges = $remoteData['summary']['changes'] ?? 0;
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Remote Cron Execution failed: " . $e->getMessage());
+        }
+
+        // 2. Evaluasi status di lokal dan update tabel lokal
+        $serverNow = Carbon::now();
+        $locations = Lokasi::with('onlineMonitoring')->orderBy('id', 'asc')->get();
+
+        $countOnline = 0;
+        $countOffline = 0;
+        $countChanges = $remoteChanges;
+        $details = [];
+
+        foreach ($locations as $lokasi) {
+            $device = $lokasi->onlineMonitoring;
+            if (!$device) {
+                $device = OnlineMonitoring::create([
+                    'lokasi_id' => $lokasi->id,
+                    'jaringan' => 'Dynamic / DHCP Network',
+                    'status' => 'Offline',
+                    'first_monitored_at' => $serverNow,
+                ]);
+            }
+
+            $threshold = (int) ($lokasi->batas_waktu_henti ?? 60);
+            if ($threshold <= 0) $threshold = 60;
+
+            $lastUpdate = $device->last_update;
+            $oldStatus = $device->status ?? 'Offline';
+            $diffSeconds = $lastUpdate ? (int) max(0, $lastUpdate->diffInSeconds($serverNow, false)) : null;
+
+            // Jika melebihi batas waktu henti atau belum pernah update => Offline
+            if ($lastUpdate === null || $diffSeconds > $threshold) {
+                $newStatus = 'Offline';
+            } else {
+                $newStatus = 'Online';
+            }
+
+            $isChanged = ($oldStatus !== $newStatus);
+
+            if ($isChanged || empty($device->status)) {
+                $device->status = $newStatus;
+                $device->save();
+                $countChanges++;
+
+                // Catat log transisi riwayat jika status berubah
+                OnlineMonitoringHistory::create([
+                    'online_monitoring_id' => $device->id,
+                    'lokasi_id' => $lokasi->id,
+                    'jaringan' => $device->jaringan ?: 'Dynamic / DHCP Network',
+                    'previous_status' => $oldStatus,
+                    'current_status' => $newStatus,
+                    'downtime_start' => ($newStatus === 'Offline') ? ($lastUpdate ? $lastUpdate->copy()->addSeconds($threshold) : $serverNow) : null,
+                    'downtime_end' => ($newStatus === 'Online') ? $serverNow : null,
+                    'duration_seconds' => ($diffSeconds && $diffSeconds > $threshold) ? ($diffSeconds - $threshold) : 0,
+                    'recovery_time' => ($newStatus === 'Online') ? $serverNow : null,
+                    'recorded_at' => $serverNow,
+                    'notes' => ($newStatus === 'Offline')
+                        ? "Otomatis diubah menjadi Offline oleh Cron Job (melebihi batas waktu henti {$threshold} detik)"
+                        : "Koneksi pulih menjadi Online",
+                ]);
+            }
+
+            if ($newStatus === 'Online') {
+                $countOnline++;
+            } else {
+                $countOffline++;
+            }
+
+            $details[] = [
+                'lokasi_id' => $lokasi->id,
+                'nama_lokasi' => $lokasi->nama_lokasi,
+                'threshold_seconds' => $threshold,
+                'last_update' => $lastUpdate?->toIso8601String(),
+                'diff_seconds' => $diffSeconds,
+                'previous_status' => $oldStatus,
+                'status' => $newStatus,
+                'is_changed' => $isChanged,
+            ];
+        }
+
+        return [
+            'total' => count($details),
+            'online' => $countOnline,
+            'offline' => $countOffline,
+            'changes' => $countChanges,
+            'details' => $details,
+        ];
+    }
+}
