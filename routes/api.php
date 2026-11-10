@@ -5,6 +5,16 @@ use App\Http\Controllers\testApi\testapiController;
 use App\Http\Controllers\Api\MonitoringController;
 use App\Http\Controllers\Api\OnlineMonitoringApiController;
 use App\Http\Controllers\Api\LokasiApiController;
+use App\Http\Controllers\Api\AuthApiController;
+
+// Public Authentication API
+Route::post('/login', [AuthApiController::class, 'login'])->name('api.login');
+
+// Protected User APIs
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', [AuthApiController::class, 'me'])->name('api.me');
+    Route::post('/logout', [AuthApiController::class, 'logout'])->name('api.logout');
+});
 
 // Products API
 Route::apiResource('/testapi', testapiController::class);
@@ -30,3 +40,17 @@ Route::prefix('online-monitoring')->group(function () {
     Route::get('/{id}/history', [OnlineMonitoringApiController::class, 'history'])->name('api.online-monitoring.history');
     Route::get('/{id}/downtime', [OnlineMonitoringApiController::class, 'downtime'])->name('api.online-monitoring.downtime');
 });
+
+// Cronjob Status Monitoring API (Untuk trigger via HTTP / Webcron / Dashboard / Scheduler)
+Route::match(['get', 'post'], '/cron/status-monitoring', [OnlineMonitoringApiController::class, 'cronStatus'])->name('api.cron.status-monitoring');
+
+// cronjob testing 
+Route::get('/cron-test', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'Cron API berhasil diakses',
+        'server' => 'Windows Laragon',
+        'timestamp' => now()->toDateTimeString(),
+    ]);
+});
+
