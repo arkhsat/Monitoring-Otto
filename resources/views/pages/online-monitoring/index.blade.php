@@ -31,11 +31,10 @@
         <!-- Card 1: Total Lokasi Terpantau -->
         <div class="bg-white rounded-xl shadow-md p-5 flex items-center justify-between border border-slate-100">
             <div>
-                <span class="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider block">Total Lokasi Jaringan</span>
+                <span class="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider block">Total Jaringan</span>
                 <div id="summaryTotal" class="text-2xl md:text-3xl font-extrabold text-slate-900 mt-1">
                     {{ $summary['total_locations'] ?? 0 }} Lokasi
                 </div>
-                <span class="text-xs text-slate-400 mt-1 block">Semua titik onsite aktif</span>
             </div>
             <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-blue-50 text-[#0079C6] flex items-center justify-center shrink-0">
                 <i data-lucide="network" class="w-7 h-7"></i>
@@ -45,14 +44,10 @@
         <!-- Card 2: Lokasi Online Normal -->
         <div class="bg-white rounded-xl shadow-md p-5 flex items-center justify-between border border-slate-100">
             <div>
-                <span class="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider block">Koneksi Normal (Online)</span>
+                <span class="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider block">Jaringan Online</span>
                 <div id="summaryOnline" class="text-2xl md:text-3xl font-extrabold text-[#00B050] mt-1">
                     {{ $summary['online'] ?? 0 }} Lokasi
                 </div>
-                <span class="text-xs text-emerald-600 mt-1 font-semibold flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-[#00B050] inline-block animate-pulse"></span>
-                    Update &lt; 5 menit lalu
-                </span>
             </div>
             <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-emerald-50 text-[#00B050] flex items-center justify-center shrink-0">
                 <i data-lucide="check-circle-2" class="w-7 h-7"></i>
@@ -62,14 +57,10 @@
         <!-- Card 3: Gangguan & Offline -->
         <div class="bg-white rounded-xl shadow-md p-5 flex items-center justify-between border border-slate-100">
             <div>
-                <span class="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider block">Perlu Perhatian / Gangguan</span>
+                <span class="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider block">Jaringan Offline</span>
                 <div id="summaryWarning" class="text-2xl md:text-3xl font-extrabold text-[#FF0000] mt-1">
                     {{ ($summary['gangguan'] ?? 0) + ($summary['offline'] ?? 0) }} Lokasi
                 </div>
-                <span id="summaryWarningDetail" class="text-xs text-rose-500 mt-1 font-semibold flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-[#FF0000] inline-block"></span>
-                    {{ $summary['gangguan'] ?? 0 }} Gangguan, {{ $summary['offline'] ?? 0 }} Offline
-                </span>
             </div>
             <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-rose-50 text-[#FF0000] flex items-center justify-center shrink-0">
                 <i data-lucide="alert-triangle" class="w-7 h-7"></i>
@@ -82,11 +73,8 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
             <div>
                 <h2 class="text-lg md:text-xl font-bold text-black flex items-center gap-2">
-                    <span>Status Jaringan Onsite Parking</span>
+                    <span>Status Jaringan Onsite</span>
                 </h2>
-                <p class="text-xs md:text-sm text-slate-500">
-                    Real-time konektivitas jaringan per lokasi 
-                </p>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
                 <!-- Last Sync Status -->

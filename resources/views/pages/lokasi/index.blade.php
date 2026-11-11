@@ -30,9 +30,6 @@
                         {{ count($lokasis ?? []) }} Lokasi
                     </span>
                 </h2>
-                <p class="text-xs md:text-sm text-slate-500">
-                    Kelola data master lokasi onsite, UUID, dan API Key lokasi (tersimpan otomatis dalam bentuk Hash via RESTful API)
-                </p>
             </div>
 
             <div class="flex items-center gap-3 w-full sm:w-auto flex-wrap">

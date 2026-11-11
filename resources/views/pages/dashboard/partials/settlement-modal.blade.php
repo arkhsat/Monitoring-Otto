@@ -96,7 +96,7 @@
         <script>
             // ---------- Config ----------
             const SETTLEMENT_LOGO_BASE = "{{ asset('images/banks') }}";
-            const SETTLEMENT_THOUSAND_SEPARATOR = false; // mockup shows plain digits (100000). Set true for 100.000
+            const SETTLEMENT_THOUSAND_SEPARATOR = true; // mockup shows plain digits (100000). Set true for 100.000
 
             // Fixed display order + logos
             const SETTLEMENT_BANKS = [{
