@@ -27,6 +27,12 @@ class LokasiRequest extends FormRequest
             'batas_waktu_henti' => ['required', 'integer', 'min:1'],
             'uuid_lokasi' => ['nullable', 'string', 'max:255'],
             'api_lokasi' => ['nullable', 'string', 'max:255'],
+            'api_token_otto' => ['nullable', 'string', 'max:255'],
+            'api_url_otto' => ['nullable', 'string', 'max:255'],
+            'api_token_mdd' => ['nullable', 'string', 'max:255'],
+            'api_url_mdd' => ['nullable', 'string', 'max:255'],
+            'api_token_lokasi' => ['nullable', 'string', 'max:255'],
+            'api_url_lokasi' => ['nullable', 'string', 'max:255'],
         ];
     }
 
