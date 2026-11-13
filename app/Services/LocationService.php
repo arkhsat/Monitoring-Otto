@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\DB;
 
 class LocationService
 {
+    protected ReconciliationService $reconciliationService;
+
+    public function __construct(?ReconciliationService $reconciliationService = null)
+    {
+        $this->reconciliationService = $reconciliationService ?: app(ReconciliationService::class);
+    }
     /**
      * Get locations from database table `lokasis`, with fallback to config.
      *
@@ -113,27 +119,46 @@ class LocationService
         ?int $month = null,
         ?int $year = null
     ): array {
-        $query = DB::table('data')->where('Kode', $kode);
+        // 1. Ambil data rekonsiliasi dari 3 Database Transaksi via API
+        try {
+            $filter = array_filter([
+                'date' => $date,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'month' => $month,
+                'year' => $year,
+            ]);
 
-        if (!empty($startDate) && !empty($endDate)) {
-            $query->whereDate('Tanggal', '>=', $startDate)
-                  ->whereDate('Tanggal', '<=', $endDate);
-        } elseif (!empty($startDate)) {
-            $query->whereDate('Tanggal', '>=', $startDate);
-        } elseif (!empty($endDate)) {
-            $query->whereDate('Tanggal', '<=', $endDate);
-        } elseif (!empty($date)) {
-            $query->whereDate('Tanggal', $date);
-        } elseif (!empty($month) && !empty($year)) {
-            $query->whereYear('Tanggal', $year)
-                  ->whereMonth('Tanggal', $month);
-        } elseif (!empty($year)) {
-            $query->whereYear('Tanggal', $year);
-        } elseif (!empty($month)) {
-            $query->whereMonth('Tanggal', $month);
+            $apiRecords = $this->reconciliationService->getReconciliationData($kode, $filter);
+            if (!empty($apiRecords)) {
+                return $apiRecords;
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("LocationService reconciliation error (Kode {$kode}): " . $e->getMessage());
         }
 
+        // 2. Fallback membaca dari tabel data lokal jika ada
         try {
+            $query = DB::table('data')->where('Kode', $kode);
+
+            if (!empty($startDate) && !empty($endDate)) {
+                $query->whereDate('Tanggal', '>=', $startDate)
+                      ->whereDate('Tanggal', '<=', $endDate);
+            } elseif (!empty($startDate)) {
+                $query->whereDate('Tanggal', '>=', $startDate);
+            } elseif (!empty($endDate)) {
+                $query->whereDate('Tanggal', '<=', $endDate);
+            } elseif (!empty($date)) {
+                $query->whereDate('Tanggal', $date);
+            } elseif (!empty($month) && !empty($year)) {
+                $query->whereYear('Tanggal', $year)
+                      ->whereMonth('Tanggal', $month);
+            } elseif (!empty($year)) {
+                $query->whereYear('Tanggal', $year);
+            } elseif (!empty($month)) {
+                $query->whereMonth('Tanggal', $month);
+            }
+
             $rawRecords = $query->orderBy('Tanggal', 'desc')->get();
 
             $records = [];

@@ -98,9 +98,15 @@ class OnlineMonitoringService
     /**
      * Calculate downtime variable: time now - last online time.
      * RESET SETIAP JAM 00:00 (Dihitung per hari berjalan mulai dari 00:00:00).
+     * Akumulatif: Saat online, waktu henti tetap bertahan (stay) di akumulasi downtime hari ini,
+     * dan baru berjalan bertambah kembali jika status berubah menjadi offline/gangguan.
      */
-    public function calculateDowntime(?OnlineMonitoring $device, ?Carbon $serverNow = null, int $thresholdSeconds = 60): array
-    {
+    public function calculateDowntime(
+        ?OnlineMonitoring $device,
+        ?Carbon $serverNow = null,
+        int $thresholdSeconds = 60,
+        ?int $closedDowntimeSeconds = null
+    ): array {
         $serverNow = $serverNow ?: Carbon::now();
         $lastUpdate = $device?->last_update;
         $threshold = $thresholdSeconds > 0 ? $thresholdSeconds : 60;
@@ -122,32 +128,33 @@ class OnlineMonitoringService
             ];
         }
 
+        // Ambil akumulasi waktu henti yang telah selesai/pulih hari ini jika belum di-supply
+        if ($closedDowntimeSeconds === null && $device->lokasi_id) {
+            $closedDowntimeSeconds = $this->getClosedDowntimeToday($device->lokasi_id, $startOfDay, $serverNow);
+        } else {
+            $closedDowntimeSeconds = (int) $closedDowntimeSeconds;
+        }
+
         $diffSeconds = (int) max(0, $lastUpdate->diffInSeconds($serverNow, false));
 
         // Jika Online (masih di dalam batas waktu henti)
         if ($diffSeconds <= $threshold) {
-            return [
-                'downtime_seconds' => 0,
-                'uptime_seconds' => $elapsedToday,
-                'downtime_formatted' => '0m (0%)',
-                'uptime_percentage' => 100.0,
-                'downtime_percentage' => 0.0,
-                'monitored_period_seconds' => $elapsedToday,
-                'is_incomplete_period' => false,
-                'monitored_hours' => round($elapsedToday / 3600, 1),
-            ];
-        }
-
-        // Tentukan titik mulai offline
-        $downtimeStart = $lastUpdate->copy()->addSeconds($threshold);
-
-        // Jika offline terjadi sebelum jam 00:00 hari ini, maka downtime hari ini dihitung sejak jam 00:00 (reset)
-        if ($downtimeStart->lt($startOfDay)) {
-            $downtimeToday = $elapsedToday;
+            // Saat Online: insiden berjalan = 0, waktu henti stay di akumulasi insiden yang sudah terjadi hari ini
+            $ongoingDowntime = 0;
         } else {
-            $downtimeToday = max(0, min($elapsedToday, (int) $downtimeStart->diffInSeconds($serverNow)));
+            // Saat Offline / Gangguan: waktu henti berjalan kembali dari titik mulai offline
+            $downtimeStart = $lastUpdate->copy()->addSeconds($threshold);
+
+            // Jika offline terjadi sebelum jam 00:00 hari ini, maka downtime hari ini dihitung sejak jam 00:00 (reset)
+            if ($downtimeStart->lt($startOfDay)) {
+                $ongoingDowntime = $elapsedToday;
+            } else {
+                $ongoingDowntime = max(0, min($elapsedToday, (int) $downtimeStart->diffInSeconds($serverNow)));
+            }
         }
 
+        // Total akumulasi downtime hari ini (stay saat online, bertambah saat offline)
+        $downtimeToday = min($elapsedToday, $closedDowntimeSeconds + $ongoingDowntime);
         $uptimeToday = max(0, $elapsedToday - $downtimeToday);
         $uptimePct = round(($uptimeToday / $elapsedToday) * 100, 1);
         $downtimePct = round(($downtimeToday / $elapsedToday) * 100, 1);
@@ -163,6 +170,92 @@ class OnlineMonitoringService
             'is_incomplete_period' => false,
             'monitored_hours' => round($elapsedToday / 3600, 1),
         ];
+    }
+
+    /**
+     * Hitung total detik downtime hari ini yang telah selesai/pulih dari tabel riwayat insiden
+     */
+    public function getClosedDowntimeToday(int $lokasiId, ?Carbon $startOfDay = null, ?Carbon $serverNow = null): int
+    {
+        $serverNow = $serverNow ?: Carbon::now();
+        $startOfDay = $startOfDay ?: $serverNow->copy()->startOfDay();
+
+        try {
+            $histories = OnlineMonitoringHistory::where('lokasi_id', $lokasiId)
+                ->where(function ($q) use ($startOfDay) {
+                    $q->where('downtime_end', '>=', $startOfDay)
+                      ->orWhere('recovery_time', '>=', $startOfDay)
+                      ->orWhere(function ($sub) use ($startOfDay) {
+                          $sub->where('current_status', 'Online')
+                              ->where('recorded_at', '>=', $startOfDay);
+                      });
+                })
+                ->where('duration_seconds', '>', 0)
+                ->get();
+
+            $totalClosed = 0;
+            foreach ($histories as $h) {
+                $end = $h->downtime_end ?? $h->recovery_time ?? $h->recorded_at;
+                $start = $h->downtime_start ?? ($end ? $end->copy()->subSeconds((int)$h->duration_seconds) : null);
+
+                if ($end && $start) {
+                    $effectiveStart = $start->lt($startOfDay) ? $startOfDay : $start;
+                    $effectiveEnd = $end->gt($serverNow) ? $serverNow : $end;
+                    if ($effectiveEnd->gt($effectiveStart)) {
+                        $totalClosed += (int) $effectiveStart->diffInSeconds($effectiveEnd);
+                    }
+                } else {
+                    $totalClosed += (int) $h->duration_seconds;
+                }
+            }
+
+            return $totalClosed;
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Batch query akumulasi downtime yang telah pulih hari ini untuk seluruh lokasi (optimasi N+1)
+     */
+    public function getAllClosedDowntimeToday(?Carbon $startOfDay = null, ?Carbon $serverNow = null): array
+    {
+        $serverNow = $serverNow ?: Carbon::now();
+        $startOfDay = $startOfDay ?: $serverNow->copy()->startOfDay();
+        $map = [];
+
+        try {
+            $histories = OnlineMonitoringHistory::where(function ($q) use ($startOfDay) {
+                    $q->where('downtime_end', '>=', $startOfDay)
+                      ->orWhere('recovery_time', '>=', $startOfDay)
+                      ->orWhere(function ($sub) use ($startOfDay) {
+                          $sub->where('current_status', 'Online')
+                              ->where('recorded_at', '>=', $startOfDay);
+                      });
+                })
+                ->where('duration_seconds', '>', 0)
+                ->get();
+
+            foreach ($histories as $h) {
+                $lid = (int) $h->lokasi_id;
+                $end = $h->downtime_end ?? $h->recovery_time ?? $h->recorded_at;
+                $start = $h->downtime_start ?? ($end ? $end->copy()->subSeconds((int)$h->duration_seconds) : null);
+
+                if ($end && $start) {
+                    $effectiveStart = $start->lt($startOfDay) ? $startOfDay : $start;
+                    $effectiveEnd = $end->gt($serverNow) ? $serverNow : $end;
+                    if ($effectiveEnd->gt($effectiveStart)) {
+                        $map[$lid] = ($map[$lid] ?? 0) + (int) $effectiveStart->diffInSeconds($effectiveEnd);
+                    }
+                } else {
+                    $map[$lid] = ($map[$lid] ?? 0) + (int) $h->duration_seconds;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Local DB offline
+        }
+
+        return $map;
     }
 
     /**
@@ -245,6 +338,9 @@ class OnlineMonitoringService
         $countGangguan = 0;
         $countOffline = 0;
 
+        $startOfDay = $serverNow->copy()->startOfDay();
+        $closedDowntimeMap = $this->getAllClosedDowntimeToday($startOfDay, $serverNow);
+
         foreach ($locations as $lokasi) {
             $device = $lokasi->onlineMonitoring;
             $lastUpdate = $device?->last_update;
@@ -253,8 +349,9 @@ class OnlineMonitoringService
                 $threshold = 60;
             }
 
+            $closedSec = $closedDowntimeMap[$lokasi->id] ?? 0;
             $statusData = $this->calculateStatus($lastUpdate, $serverNow, $threshold);
-            $downtimeData = $this->calculateDowntime($device, $serverNow, $threshold);
+            $downtimeData = $this->calculateDowntime($device, $serverNow, $threshold, $closedSec);
 
             if ($statusData['code'] === 'online') {
                 $countOnline++;
@@ -540,16 +637,17 @@ class OnlineMonitoringService
             $device->ip_address = $data['ip_address'];
         }
 
+        $oldLastUpdate = $device->last_update;
         $device->status = 'Online';
         $device->last_update = $now;
         $device->save();
 
         if ($previousStatus['code'] !== 'online' && $device->wasRecentlyCreated === false) {
-            $downtimeStart = $device->last_update
-                ? $device->last_update->copy()->addSeconds($threshold)
+            $downtimeStart = $oldLastUpdate
+                ? $oldLastUpdate->copy()->addSeconds($threshold)
                 : $now->copy()->subMinutes(10);
 
-            $duration = max(0, $now->diffInSeconds($downtimeStart));
+            $duration = max(0, (int) $now->diffInSeconds($downtimeStart));
 
             OnlineMonitoringHistory::create([
                 'online_monitoring_id' => $device->id,
@@ -644,22 +742,48 @@ class OnlineMonitoringService
                 $device->save();
                 $countChanges++;
 
-                // Catat log transisi riwayat jika status berubah
-                OnlineMonitoringHistory::create([
-                    'online_monitoring_id' => $device->id,
-                    'lokasi_id' => $lokasi->id,
-                    'jaringan' => $device->jaringan ?: 'Dynamic / DHCP Network',
-                    'previous_status' => $oldStatus,
-                    'current_status' => $newStatus,
-                    'downtime_start' => ($newStatus === 'Offline') ? ($lastUpdate ? $lastUpdate->copy()->addSeconds($threshold) : $serverNow) : null,
-                    'downtime_end' => ($newStatus === 'Online') ? $serverNow : null,
-                    'duration_seconds' => ($diffSeconds && $diffSeconds > $threshold) ? ($diffSeconds - $threshold) : 0,
-                    'recovery_time' => ($newStatus === 'Online') ? $serverNow : null,
-                    'recorded_at' => $serverNow,
-                    'notes' => ($newStatus === 'Offline')
-                        ? "Otomatis diubah menjadi Offline oleh Cron Job (melebihi batas waktu henti {$threshold} detik)"
-                        : "Koneksi pulih menjadi Online",
-                ]);
+                if ($newStatus === 'Online') {
+                    // Pulih menjadi Online: cari titik mulai offline terakhir
+                    $lastOfflineHistory = OnlineMonitoringHistory::where('lokasi_id', $lokasi->id)
+                        ->where('current_status', 'Offline')
+                        ->orderBy('recorded_at', 'desc')
+                        ->first();
+                    $downtimeStart = $lastOfflineHistory?->downtime_start 
+                        ?? ($lastUpdate ? $lastUpdate->copy()->addSeconds($threshold) : $serverNow);
+                    $duration = max(0, (int) $serverNow->diffInSeconds($downtimeStart));
+
+                    OnlineMonitoringHistory::create([
+                        'online_monitoring_id' => $device->id,
+                        'lokasi_id' => $lokasi->id,
+                        'jaringan' => $device->jaringan ?: 'Dynamic / DHCP Network',
+                        'previous_status' => $oldStatus,
+                        'current_status' => 'Online',
+                        'downtime_start' => $downtimeStart,
+                        'downtime_end' => $serverNow,
+                        'duration_seconds' => $duration,
+                        'recovery_time' => $serverNow,
+                        'recorded_at' => $serverNow,
+                        'notes' => 'Koneksi pulih menjadi Online',
+                    ]);
+                } else {
+                    // Menjadi Offline
+                    $downtimeStart = $lastUpdate ? $lastUpdate->copy()->addSeconds($threshold) : $serverNow;
+                    $duration = ($diffSeconds && $diffSeconds > $threshold) ? ($diffSeconds - $threshold) : 0;
+
+                    OnlineMonitoringHistory::create([
+                        'online_monitoring_id' => $device->id,
+                        'lokasi_id' => $lokasi->id,
+                        'jaringan' => $device->jaringan ?: 'Dynamic / DHCP Network',
+                        'previous_status' => $oldStatus,
+                        'current_status' => 'Offline',
+                        'downtime_start' => $downtimeStart,
+                        'downtime_end' => null,
+                        'duration_seconds' => $duration,
+                        'recovery_time' => null,
+                        'recorded_at' => $serverNow,
+                        'notes' => "Otomatis diubah menjadi Offline oleh Cron Job (melebihi batas waktu henti {$threshold} detik)",
+                    ]);
+                }
             }
 
             if ($newStatus === 'Online') {

@@ -86,6 +86,37 @@ class RemoteLokasiService
     }
 
     /**
+     * Mengambil satu data lokasi berdasarkan ID
+     *
+     * @param int $id
+     * @return array|null
+     */
+    public function getById(int $id): ?array
+    {
+        try {
+            $response = $this->client()->get("{$this->endpoint}?id={$id}");
+            if ($response->successful()) {
+                $json = $response->json();
+                if (!empty($json['success']) && isset($json['data'])) {
+                    return (array) $json['data'];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Remote getById({$id}) error: " . $e->getMessage());
+        }
+
+        // Fallback: cari dari list getAll()
+        $all = $this->getAll();
+        foreach ($all['data'] ?? [] as $loc) {
+            if ((int) ($loc['id'] ?? 0) === $id) {
+                return (array) $loc;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Tambah lokasi baru ke RESTful API domain
      *
      * @param array $data
@@ -239,6 +270,12 @@ class RemoteLokasiService
                     'nama_lokasi' => $item['nama_lokasi'] ?? '',
                     'keterangan_alamat' => $item['keterangan_alamat'] ?? null,
                     'batas_waktu_henti' => (int) ($item['batas_waktu_henti'] ?? 60),
+                    'api_token_otto' => $item['api_token_otto'] ?? null,
+                    'api_url_otto' => $item['api_url_otto'] ?? null,
+                    'api_token_mdd' => $item['api_token_mdd'] ?? null,
+                    'api_url_mdd' => $item['api_url_mdd'] ?? null,
+                    'api_token_lokasi' => $item['api_token_lokasi'] ?? null,
+                    'api_url_lokasi' => $item['api_url_lokasi'] ?? null,
                 ];
 
                 if (!$lokasi) {
