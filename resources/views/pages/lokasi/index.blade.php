@@ -185,6 +185,9 @@
     const inputApiLokasi = document.getElementById('api_lokasi');
     const inputKeteranganAlamat = document.getElementById('keterangan_alamat');
     const inputBatasWaktuHenti = document.getElementById('batas_waktu_henti');
+    const inputApiTokenOtto = document.getElementById('api_token_otto');
+    const inputApiTokenMdd = document.getElementById('api_token_mdd');
+    const inputApiTokenLokasi = document.getElementById('api_token_lokasi');
     const btnSimpanLokasiText = document.getElementById('btnSimpanLokasiText');
     const lokasiFormError = document.getElementById('lokasiFormError');
     const lokasiFormErrorText = document.getElementById('lokasiFormErrorText');
@@ -378,6 +381,9 @@
         }
         if (inputKeteranganAlamat) inputKeteranganAlamat.value = '';
         if (inputBatasWaktuHenti) inputBatasWaktuHenti.value = 60;
+        if (inputApiTokenOtto) inputApiTokenOtto.value = '';
+        if (inputApiTokenMdd) inputApiTokenMdd.value = '';
+        if (inputApiTokenLokasi) inputApiTokenLokasi.value = '';
 
         if (lokasiModal) {
             lokasiModal.classList.remove('hidden');
@@ -408,6 +414,9 @@
         }
         if (inputKeteranganAlamat) inputKeteranganAlamat.value = item.keterangan_alamat && item.keterangan_alamat !== '-' ? item.keterangan_alamat : '';
         if (inputBatasWaktuHenti) inputBatasWaktuHenti.value = item.batas_waktu_henti || 60;
+        if (inputApiTokenOtto) inputApiTokenOtto.value = item.api_token_otto || '';
+        if (inputApiTokenMdd) inputApiTokenMdd.value = item.api_token_mdd || '';
+        if (inputApiTokenLokasi) inputApiTokenLokasi.value = item.api_token_lokasi || '';
 
         if (lokasiModal) {
             lokasiModal.classList.remove('hidden');
@@ -434,6 +443,9 @@
             nama_lokasi: inputNamaLokasi ? inputNamaLokasi.value.trim() : '',
             keterangan_alamat: inputKeteranganAlamat ? inputKeteranganAlamat.value.trim() : '',
             batas_waktu_henti: inputBatasWaktuHenti ? parseInt(inputBatasWaktuHenti.value) : 60,
+            api_token_otto: inputApiTokenOtto ? inputApiTokenOtto.value.trim() : '',
+            api_token_mdd: inputApiTokenMdd ? inputApiTokenMdd.value.trim() : '',
+            api_token_lokasi: inputApiTokenLokasi ? inputApiTokenLokasi.value.trim() : '',
         };
 
         if (inputUuidLokasi && inputUuidLokasi.value.trim()) {

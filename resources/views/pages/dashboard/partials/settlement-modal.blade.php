@@ -46,14 +46,65 @@
                     <div id="settlementGrandTotal" class="text-center text-sm font-extrabold text-black">0</div>
                 </div>
 
-                <!-- File Settlement (.txt) -->
-                <div class="flex items-center gap-4 px-6 py-3">
-                    <span class="text-sm font-extrabold text-black">File Settlement</span>
-                    <a id="settlementFileLink" href="#" target="_blank" rel="noopener"
-                        class="text-[#0079C6] hover:text-[#005f9e] transition-colors" title="File settlement (.txt)">
-                        <i data-lucide="file-text" class="w-5 h-5"></i>
-                    </a>
-                    <span id="settlementFileName" class="text-xs text-slate-400 truncate"></span>
+                <!-- File Settlement (.txt & .ok) -->
+                <div class="px-2 py-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-extrabold text-black">File Settlement</span>
+                        <span id="settlementFilesStatus" class="text-[11px] font-medium text-slate-400">-</span>
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 space-y-2 text-xs">
+                        <!-- Row .txt -->
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <i data-lucide="file-text" class="w-4 h-4 text-[#0079C6] shrink-0"></i>
+                                <span class="font-bold text-slate-700 shrink-0">.txt:</span>
+                                <span id="settlementTxtName" class="text-slate-600 truncate">Belum tersedia</span>
+                            </div>
+                            <div id="settlementTxtActions" class="hidden flex items-center gap-1.5 shrink-0">
+                                <button type="button" onclick="previewSettlementFile('txt')"
+                                    class="px-2 py-1 rounded bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold cursor-pointer">
+                                    Lihat
+                                </button>
+                                <a id="settlementTxtDownload" href="#" target="_blank" rel="noopener"
+                                    class="px-2 py-1 rounded bg-[#0079C6] hover:bg-[#005f9e] text-white font-semibold">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Row .ok -->
+                        <div class="flex items-center justify-between gap-2 border-t border-slate-200/80 pt-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <i data-lucide="file-check-2" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+                                <span class="font-bold text-slate-700 shrink-0">.ok:</span>
+                                <span id="settlementOkName" class="text-slate-600 truncate">Belum tersedia</span>
+                            </div>
+                            <div id="settlementOkActions" class="hidden flex items-center gap-1.5 shrink-0">
+                                <button type="button" onclick="previewSettlementFile('ok')"
+                                    class="px-2 py-1 rounded bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold cursor-pointer">
+                                    Lihat
+                                </button>
+                                <a id="settlementOkDownload" href="#" target="_blank" rel="noopener"
+                                    class="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Isi File (.txt / .ok) -->
+                    <div id="settlementFilePreviewBox" class="hidden bg-slate-900 text-slate-100 rounded-lg p-2.5">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span id="settlementPreviewTitle" class="text-[11px] font-bold text-sky-300 truncate">-</span>
+                            <button type="button" onclick="closeSettlementFilePreview()"
+                                class="text-[11px] text-slate-300 hover:text-white cursor-pointer">
+                                Tutup
+                            </button>
+                        </div>
+                        <pre id="settlementFilePreviewContent"
+                            class="text-[11px] leading-relaxed font-mono max-h-36 overflow-auto whitespace-pre-wrap break-all [scrollbar-width:thin]"></pre>
+                    </div>
                 </div>
 
                 <!-- Send Settlement (red) -->
@@ -121,40 +172,19 @@
                 },
             ];
 
-            // Placeholder data. Replace with backend data later:
-            // { date, file: {name, url}, banks: { bca: [{qty, nominal}, ...], ... } }
-            const SETTLEMENT_SAMPLE = {
-                date: '22/10/2026',
+            // Data Settlement (dikosongkan terlebih dahulu untuk diisi otomatis dari database nantinya)
+            // Struktur: { date, file: {name, url}, banks: { bca: [{qty, nominal}], mandiri: [], bri: [], bni: [] } }
+            const Settlement = {
+                date: null,
                 file: {
-                    name: 'settlement.txt',
+                    name: null,
                     url: '#'
                 },
                 banks: {
-                    bca: [{
-                        qty: 1,
-                        nominal: 100000
-                    }, {
-                        qty: 1,
-                        nominal: 100000
-                    }],
-                    mandiri: [{
-                        qty: 2,
-                        nominal: 200000
-                    }, {
-                        qty: 1,
-                        nominal: 100000
-                    }],
-                    bri: [{
-                        qty: 3,
-                        nominal: 300000
-                    }, {
-                        qty: 3,
-                        nominal: 100000
-                    }],
-                    bni: [{
-                        qty: 4,
-                        nominal: 350000
-                    }],
+                    bca: [],
+                    mandiri: [],
+                    bri: [],
+                    bni: [],
                 },
             };
 
@@ -174,12 +204,12 @@
             }
 
             // Subtotal = sum(qty * nominal); Grand total = sum of subtotals
-            function renderSettlementData(data = SETTLEMENT_SAMPLE) {
+            function renderSettlementData(data = Settlement) {
                 const list = document.getElementById('settlementBankList');
                 let grand = 0;
 
-                list.innerHTML = SETTLEMENT_BANKS.map(bank => {
-                    const lines = (data.banks && data.banks[bank.key]) || [];
+                const bankRowsHtml = SETTLEMENT_BANKS.map(bank => {
+                    const lines = (data && data.banks && data.banks[bank.key]) || [];
                     if (!lines.length) return '';
                     const subtotal = lines.reduce((s, l) => s + Number(l.qty) * Number(l.nominal), 0);
                     grand += subtotal;
@@ -205,24 +235,180 @@
                 </div>`;
                 }).join('');
 
-                document.getElementById('settlementGrandTotal').textContent = fmtSettlement(grand);
-                if (data.date) document.getElementById('settlementModalDate').textContent = data.date;
+                if (!bankRowsHtml.trim()) {
+                    list.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-10 text-slate-400 text-xs text-center">
+                            <i data-lucide="receipt" class="w-8 h-8 text-slate-300 mb-1.5"></i>
+                            <span>Belum ada data rincian transaksi bank untuk settlement ini.</span>
+                        </div>
+                    `;
+                } else {
+                    list.innerHTML = bankRowsHtml;
+                }
 
-                const link = document.getElementById('settlementFileLink');
-                link.href = (data.file && data.file.url) || '#';
-                document.getElementById('settlementFileName').textContent = (data.file && data.file.name) || '';
+                document.getElementById('settlementGrandTotal').textContent = fmtSettlement(grand);
+                if (data && data.date) document.getElementById('settlementModalDate').textContent = data.date;
 
                 if (window.lucide) lucide.createIcons();
+            }
+
+            const SETTLEMENTS_API_URL = @json(url('/api/settlements'));
+            const SETTLEMENTS_DOWNLOAD_URL = @json(url('/api/settlements/download'));
+
+            let currentSettlementFiles = { txt: null, ok: null };
+            let currentSettlementLokasiId = null;
+            let currentSettlementIsoDate = null;
+
+            function resolveSettlementIsoDate(data) {
+                if (data?.iso_date && /^\d{4}-\d{2}-\d{2}$/.test(data.iso_date)) {
+                    return data.iso_date;
+                }
+                const raw = String(data?.date || '').trim();
+                const ddmmyyyy = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+                if (ddmmyyyy) {
+                    return `${ddmmyyyy[3]}-${ddmmyyyy[2]}-${ddmmyyyy[1]}`;
+                }
+                return null;
+            }
+
+            function resolveSettlementLokasiId(data) {
+                if (data?.kode) return Number(data.kode);
+                const btn = document.getElementById('locationDropdownBtn');
+                return Number(btn?.getAttribute('data-current-kode') || 1);
+            }
+
+            function buildSettlementDownloadUrl(type) {
+                if (!currentSettlementLokasiId || !currentSettlementIsoDate) return '#';
+                return `${SETTLEMENTS_DOWNLOAD_URL}?lokasi_id=${encodeURIComponent(currentSettlementLokasiId)}&tanggal_settlement=${encodeURIComponent(currentSettlementIsoDate)}&type=${encodeURIComponent(type)}`;
+            }
+
+            function renderSingleSettlementFile(type, fileInfo) {
+                const cap = type === 'txt' ? 'Txt' : 'Ok';
+                const nameEl = document.getElementById(`settlement${cap}Name`);
+                const actionsEl = document.getElementById(`settlement${cap}Actions`);
+                const downloadEl = document.getElementById(`settlement${cap}Download`);
+
+                if (fileInfo && fileInfo.exists) {
+                    nameEl.textContent = fileInfo.name || `settlement.${type}`;
+                    nameEl.classList.remove('text-slate-400');
+                    nameEl.classList.add('text-slate-800', 'font-medium');
+                    downloadEl.href = buildSettlementDownloadUrl(type);
+                    actionsEl.classList.remove('hidden');
+                } else {
+                    nameEl.textContent = `Belum ada file .${type}`;
+                    nameEl.classList.remove('text-slate-800', 'font-medium');
+                    nameEl.classList.add('text-slate-400');
+                    downloadEl.href = '#';
+                    actionsEl.classList.add('hidden');
+                }
+            }
+
+            function closeSettlementFilePreview() {
+                document.getElementById('settlementFilePreviewBox').classList.add('hidden');
+                document.getElementById('settlementFilePreviewContent').textContent = '';
+            }
+
+            async function previewSettlementFile(type) {
+                const fileInfo = currentSettlementFiles[type];
+                if (!fileInfo || !fileInfo.exists) return;
+
+                const previewBox = document.getElementById('settlementFilePreviewBox');
+                const previewTitle = document.getElementById('settlementPreviewTitle');
+                const previewContent = document.getElementById('settlementFilePreviewContent');
+
+                previewTitle.textContent = fileInfo.name || `settlement.${type}`;
+                previewContent.textContent = 'Memuat isi file...';
+                previewBox.classList.remove('hidden');
+
+                if (fileInfo.content !== null && fileInfo.content !== undefined) {
+                    previewContent.textContent = fileInfo.content !== ''
+                        ? fileInfo.content
+                        : `(File .${type} kosong / 0 byte)`;
+                    return;
+                }
+
+                const downloadUrl = buildSettlementDownloadUrl(type);
+                if (downloadUrl !== '#') {
+                    try {
+                        const res = await fetch(`${downloadUrl}&inline=1`, {
+                            headers: { 'Accept': 'text/plain' }
+                        });
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const text = await res.text();
+                        previewContent.textContent = text !== '' ? text : `(File .${type} kosong / 0 byte)`;
+                    } catch (err) {
+                        previewContent.textContent = `Gagal memuat isi file .${type}: ${err.message}`;
+                    }
+                }
+            }
+
+            async function loadSettlementFiles(lokasiId, isoDate) {
+                const statusEl = document.getElementById('settlementFilesStatus');
+                closeSettlementFilePreview();
+                currentSettlementFiles = { txt: null, ok: null };
+                currentSettlementLokasiId = lokasiId;
+                currentSettlementIsoDate = isoDate;
+                renderSingleSettlementFile('txt', null);
+                renderSingleSettlementFile('ok', null);
+
+                if (!lokasiId || !isoDate) {
+                    statusEl.textContent = 'Lokasi/tanggal tidak diketahui';
+                    return;
+                }
+
+                statusEl.textContent = `Memuat file (Lokasi #${lokasiId}, ${isoDate})...`;
+
+                try {
+                    const url = `${SETTLEMENTS_API_URL}?lokasi_id=${encodeURIComponent(lokasiId)}&tanggal_settlement=${encodeURIComponent(isoDate)}`;
+                    const res = await fetch(url, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    if (!res.ok) {
+                        statusEl.textContent = `Gagal memuat file (HTTP ${res.status})`;
+                        return;
+                    }
+
+                    const json = await res.json();
+
+                    if (!json.success || !json.data) {
+                        statusEl.textContent = `Belum ada file (Lokasi #${lokasiId}, ${isoDate})`;
+                        return;
+                    }
+
+                    currentSettlementFiles.txt = json.data.file_txt || null;
+                    currentSettlementFiles.ok = json.data.file_ok || null;
+
+                    renderSingleSettlementFile('txt', currentSettlementFiles.txt);
+                    renderSingleSettlementFile('ok', currentSettlementFiles.ok);
+
+                    const hasBoth = Boolean(currentSettlementFiles.txt?.exists && currentSettlementFiles.ok?.exists);
+                    const hasAny = Boolean(currentSettlementFiles.txt?.exists || currentSettlementFiles.ok?.exists);
+                    statusEl.textContent = hasBoth ? 'File .txt & .ok tersedia' : (hasAny ? 'Sebagian file tersedia' : `Belum ada file (Lokasi #${lokasiId}, ${isoDate})`);
+                } catch (err) {
+                    statusEl.textContent = 'Gagal memuat file settlement';
+                }
             }
 
             // ---------- Open / close ----------
             function openSettlementModal(data) {
-                renderSettlementData(data || SETTLEMENT_SAMPLE);
+                const modalPayload = (data && data.banks)
+                    ? data
+                    : { ...Settlement, date: data?.date || Settlement.date };
+
+                renderSettlementData(modalPayload);
                 document.getElementById('settlementModal').classList.remove('hidden');
                 if (window.lucide) lucide.createIcons();
+
+                const lokasiId = resolveSettlementLokasiId(data);
+                const isoDate = resolveSettlementIsoDate(data);
+                loadSettlementFiles(lokasiId, isoDate);
             }
 
             function closeSettlementModal() {
+                closeSettlementFilePreview();
                 document.getElementById('settlementModal').classList.add('hidden');
             }
 
@@ -240,26 +426,8 @@
                 closeSettlementModal();
             }
 
-            // ---------- Dummy preview ----------
-            // The dashboard opens this popup by itself (it only sets the date), so fill the list
-            // with dummy data on load and whenever the popup is shown with an empty list.
-            // The date is left alone so the dashboard's own value stays. Remove once real data is wired in.
-            const SETTLEMENT_PREVIEW = {
-                ...SETTLEMENT_SAMPLE,
-                date: null
-            };
-            renderSettlementData(SETTLEMENT_PREVIEW);
-
-            new MutationObserver(() => {
-                const modal = document.getElementById('settlementModal');
-                const list = document.getElementById('settlementBankList');
-                if (!modal.classList.contains('hidden') && !list.children.length) {
-                    renderSettlementData(SETTLEMENT_PREVIEW);
-                }
-            }).observe(document.getElementById('settlementModal'), {
-                attributes: true,
-                attributeFilter: ['class']
-            });
+            // Render awal daftar settlement dengan objek kosong
+            renderSettlementData(Settlement);
 
             // Click backdrop (or the empty area around the card) to exit
             document.getElementById('settlementModal').addEventListener('click', e => {

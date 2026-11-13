@@ -113,6 +113,57 @@
                 </p>
             </div>
 
+            <!-- 6. Kredensial API Rekonsiliasi (Menu Main: Admin Otto, Settlement MDD, Report Lokasi) -->
+            <div class="pt-2 border-t border-slate-200">
+                <div class="mb-3">
+                    <h4 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                        <i data-lucide="key" class="w-4 h-4 text-[#0079C6]"></i>
+                        <span>Token API Rekonsiliasi Transaksi (Menu Main)</span>
+                    </h4>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        Token unik untuk menghubungkan database masing-masing sistem lokasi ini (opsional).
+                    </p>
+                </div>
+
+                <div class="space-y-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <!-- Token Admin Otto -->
+                    <div>
+                        <label for="api_token_otto" class="block text-xs font-bold text-slate-700 mb-1">
+                            API Token - Admin Otto
+                        </label>
+                        <input type="text" 
+                               id="api_token_otto" 
+                               name="api_token_otto" 
+                               placeholder="Contoh: token_otto_trueblue" 
+                               class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-[#0079C6] text-xs font-medium text-slate-900 outline-none transition-all bg-white">
+                    </div>
+
+                    <!-- Token Settlement MDD -->
+                    <div>
+                        <label for="api_token_mdd" class="block text-xs font-bold text-slate-700 mb-1">
+                            API Token - Settlement MDD
+                        </label>
+                        <input type="text" 
+                               id="api_token_mdd" 
+                               name="api_token_mdd" 
+                               placeholder="Contoh: token_mdd_trueblue" 
+                               class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-[#0079C6] text-xs font-medium text-slate-900 outline-none transition-all bg-white">
+                    </div>
+
+                    <!-- Token Report Lokasi -->
+                    <div>
+                        <label for="api_token_lokasi" class="block text-xs font-bold text-slate-700 mb-1">
+                            API Token - Report Lokasi (Onsite)
+                        </label>
+                        <input type="text" 
+                               id="api_token_lokasi" 
+                               name="api_token_lokasi" 
+                               placeholder="Contoh: token_lokasi_trueblue" 
+                               class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-[#0079C6] text-xs font-medium text-slate-900 outline-none transition-all bg-white">
+                    </div>
+                </div>
+            </div>
+
             <!-- Footer Actions -->
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 mt-6">
                 <button type="button" 

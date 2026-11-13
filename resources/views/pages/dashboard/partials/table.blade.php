@@ -38,14 +38,9 @@
                             {{ $status }}
                         </td>
                         <td class="py-4 px-4">
-                            @if ($ismddempty)
+                            @if ($isNotMatch)
                                 <button type="button" 
-                                        onclick="openSettlementModal({
-                                            date: '{{ $date }}',
-                                            admin: '{{ $admin }}',
-                                            mdd: '{{ $mdd }}',
-                                            report: '{{ $report }}'
-                                        })"
+                                        onclick='openSettlementModal(@json($row))'
                                         class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all cursor-pointer">
                                     Send
                                 </button>

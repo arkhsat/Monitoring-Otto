@@ -131,6 +131,8 @@
                             $downtimeColor = 'text-slate-600';
                             if (str_starts_with($item['downtime_formatted'], '0m')) {
                                 $downtimeColor = 'text-[#00B050] font-semibold';
+                            } elseif ($isOnline) {
+                                $downtimeColor = 'text-slate-700 font-semibold';
                             } elseif ($item['downtime_formatted'] !== '-') {
                                 $downtimeColor = 'text-[#FF0000] font-bold';
                             }
@@ -371,6 +373,8 @@
             let downtimeColor = 'text-slate-600';
             if (item.downtime_formatted && item.downtime_formatted.startsWith('0m')) {
                 downtimeColor = 'text-[#00B050] font-semibold';
+            } else if (isOnline) {
+                downtimeColor = 'text-slate-700 font-semibold';
             } else if (item.downtime_formatted !== '-') {
                 downtimeColor = 'text-[#FF0000] font-bold';
             }
