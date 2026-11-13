@@ -81,6 +81,19 @@ class LokasiApiController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
+            $remoteLokasi = $this->remoteService->getById($id);
+            if ($remoteLokasi) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Detail lokasi berhasil diambil',
+                    'data'    => $remoteLokasi,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Fallback ke DB lokal jika tersedia
+        }
+
+        try {
             $lokasi = Lokasi::findOrFail($id);
 
             return response()->json([
@@ -88,7 +101,7 @@ class LokasiApiController extends Controller
                 'message' => 'Detail lokasi berhasil diambil',
                 'data' => new LokasiResource($lokasi),
             ]);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Lokasi tidak ditemukan.',

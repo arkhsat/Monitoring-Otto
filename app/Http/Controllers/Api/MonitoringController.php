@@ -22,6 +22,30 @@ class MonitoringController extends Controller
         $month = $request->query('month');
         $year = $request->query('year');
 
+        // 1. Coba ambil dari ReconciliationService (3 API Database Transaksi)
+        try {
+            $filter = array_filter([
+                'date' => $date,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'month' => $month,
+                'year' => $year,
+            ]);
+
+            $reconciliationService = app(\App\Services\ReconciliationService::class);
+            $apiRecords = $reconciliationService->getReconciliationData($kode, $filter);
+
+            if (!empty($apiRecords)) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data Monitoring Rekonsiliasi Berhasil Diambil dari API',
+                    'data'    => $apiRecords,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("MonitoringController reconciliation error (Kode {$kode}): " . $e->getMessage());
+        }
+
         $records = collect([]);
 
         try {
