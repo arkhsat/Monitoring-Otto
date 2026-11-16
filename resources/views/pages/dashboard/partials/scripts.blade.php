@@ -1,4 +1,7 @@
 <script>
+    // Logo QRIS (sama dengan folder logo bank yang dipakai settlement modal)
+    const QRIS_LOGO_URL = "{{ asset('images/banks/QRIS.png') }}";
+
     // -------------------------------------------------------------
     // Location Dropdown & Dynamic Table Fetch
     // -------------------------------------------------------------
@@ -98,6 +101,7 @@
             tableBody.innerHTML = records.map(row => {
                 const isNotMatch = (row.status === 'Tidak Cocok');
                 const statusColor = isNotMatch ? 'text-[#FF0000]' : 'text-[#00B050]';
+                const qrisVal = row.qris !== undefined ? row.qris : '0';
                 const actionCell = isNotMatch 
                     ? `<button type="button" 
                                 onclick='openSettlementModal(${JSON.stringify(row)})'
@@ -110,7 +114,15 @@
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="py-4 px-4 font-normal text-slate-800">${row.date}</td>
                         <td class="py-4 px-4 font-bold ${statusColor}">${row.admin}</td>
-                        <td class="py-4 px-4 font-bold ${statusColor}">${row.mdd}</td>
+                        <td class="py-4 px-4">
+                            <div class="flex flex-col items-center justify-center gap-1">
+                                <span class="font-bold ${statusColor}">${row.mdd}</span>
+                                <span class="inline-flex items-center gap-1 text-slate-800 font-normal text-sm">
+                                    <img src="${QRIS_LOGO_URL}" alt="QRIS" class="h-4 w-auto object-contain">
+                                    <span>: ${qrisVal}</span>
+                                </span>
+                            </div>
+                        </td>
                         <td class="py-4 px-4 font-bold ${statusColor}">${row.report}</td>
                         <td class="py-4 px-4 font-bold ${statusColor}">
                             ${row.status}

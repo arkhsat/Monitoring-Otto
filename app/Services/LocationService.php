@@ -92,6 +92,8 @@ class LocationService
             'admin' => number_format($admin, 0, ',', '.'),
             'mdd' => number_format($mdd, 0, ',', '.'),
             'settlement' => number_format($mdd, 0, ',', '.'),
+            'qris' => '0',
+            'qris_raw' => 0,
             'report' => number_format($report, 0, ',', '.'),
             'lokal' => number_format($report, 0, ',', '.'),
             'status' => $status,

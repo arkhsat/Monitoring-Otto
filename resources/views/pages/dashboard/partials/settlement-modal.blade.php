@@ -170,10 +170,15 @@
                     name: 'BNI',
                     logo: 'Bank BNI.png'
                 },
+                {
+                    key: 'qris',
+                    name: 'QRIS',
+                    logo: 'QRIS.png'
+                },
             ];
 
             // Data Settlement (dikosongkan terlebih dahulu untuk diisi otomatis dari database nantinya)
-            // Struktur: { date, file: {name, url}, banks: { bca: [{qty, nominal}], mandiri: [], bri: [], bni: [] } }
+            // Struktur: { date, file: {name, url}, banks: { bca: [{qty, nominal}], mandiri: [], bri: [], bni: [], qris: [] } }
             const Settlement = {
                 date: null,
                 file: {
@@ -185,6 +190,7 @@
                     mandiri: [],
                     bri: [],
                     bni: [],
+                    qris: [],
                 },
             };
 
@@ -394,9 +400,20 @@
 
             // ---------- Open / close ----------
             function openSettlementModal(data) {
-                const modalPayload = (data && data.banks)
-                    ? data
+                let modalPayload = (data && data.banks)
+                    ? { ...data }
                     : { ...Settlement, date: data?.date || Settlement.date };
+
+                // Jika data baris membawa nilai qris, tambahkan ke breakdown bank QRIS otomatis
+                if (data && data.qris_raw && Number(data.qris_raw) > 0) {
+                    modalPayload.banks = { ...modalPayload.banks };
+                    if (!modalPayload.banks.qris || !modalPayload.banks.qris.length) {
+                        modalPayload.banks.qris = [{
+                            qty: 1,
+                            nominal: Number(data.qris_raw)
+                        }];
+                    }
+                }
 
                 renderSettlementData(modalPayload);
                 document.getElementById('settlementModal').classList.remove('hidden');

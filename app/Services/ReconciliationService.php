@@ -69,6 +69,7 @@ class ReconciliationService
         $ottoAgg   = $this->aggregateDailySums($rawDatasets['otto']);
         $mddAgg    = $this->aggregateDailySums($rawDatasets['mdd']);
         $lokasiAgg = $this->aggregateDailySums($rawDatasets['lokasi']);
+        $qrisSums  = $this->aggregateQrisSums($rawDatasets['qris']);
 
         // 5. Kumpulkan seluruh tanggal unik lalu urutkan terbaru lebih dulu
         $allDates = $this->extractAllDates($filter, $ottoAgg['has_data'], $mddAgg['has_data'], $lokasiAgg['has_data']);
@@ -96,7 +97,7 @@ class ReconciliationService
             }
 
             // $isMatch = ($hasMddData && $ottoSum === $mddSum && $mddSum === $lokasiSum);
-            $qris = $this->getQris($ottoSum, $isoDate);
+            $qris = $qrisSums[$isoDate] ?? 0;
             $shouldAddQris = ($mddSum !== $lokasiSum);
             $mddAdjustedSum = $shouldAddQris
                 ? $mddSum + $qris
@@ -118,6 +119,8 @@ class ReconciliationService
                 'admin'      => number_format($ottoSum, 0, ',', '.'),
                 'mdd'        => $hasMddData ? number_format($mddSum, 0, ',', '.') : '-',
                 'settlement' => $hasMddData ? number_format($mddSum, 0, ',', '.') : '-',
+                'qris'       => number_format($qris, 0, ',', '.'),
+                'qris_raw'   => $qris,
                 'report'     => number_format($lokasiSum, 0, ',', '.'),
                 'lokal'      => number_format($lokasiSum, 0, ',', '.'),
                 'status'     => $status,
@@ -143,6 +146,7 @@ class ReconciliationService
         $ottoParams   = array_merge($queryParams, ['source' => 'otto', 'sumber_id' => 1, 'location_id' => $locationId]);
         $mddParams    = array_merge($queryParams, ['source' => 'mdd', 'sumber_id' => 2, 'location_id' => $locationId]);
         $lokasiParams = array_merge($queryParams, ['source' => 'lokasi', 'sumber_id' => 1, 'location_id' => $locationId]);
+        $qrisParams = $ottoParams; unset($qrisParams['mode']);
 
         try {
             $responses = Http::pool(fn (Pool $pool) => [
@@ -161,12 +165,18 @@ class ReconciliationService
                     'Authorization' => "Bearer {$lokasiConfig['token']}",
                     'X-API-TOKEN' => $lokasiConfig['token'],
                 ])->get($lokasiConfig['url'], $lokasiParams),
+                $pool->as('qris')->timeout(12)->withHeaders([
+                    'Accept' => 'application/json',
+                    'Authorization' => "Bearer {$ottoConfig['token']}",
+                    'X-API-TOKEN' => $ottoConfig['token'],
+                ])->get($ottoConfig['url'], $qrisParams),
             ]);
 
             return [
                 'otto'   => $this->extractPoolResponse($responses, 'otto', $ottoConfig['url'], 'Admin Otto'),
                 'mdd'    => $this->extractPoolResponse($responses, 'mdd', $mddConfig['url'], 'Settlement MDD'),
                 'lokasi' => $this->extractPoolResponse($responses, 'lokasi', $lokasiConfig['url'], 'Report Lokasi'),
+                'qris' => $this->extractPoolResponse($responses, 'qris', $ottoConfig['url'], 'QRIS (Otto raw)'),
             ];
         } catch (\Throwable $e) {
             Log::warning('Reconciliation Http::pool() gagal, fallback ke mode sekuensial: ' . $e->getMessage());
@@ -175,6 +185,7 @@ class ReconciliationService
                 'otto'   => $this->fetchRawTransactions($ottoConfig['url'], $ottoConfig['token'], $ottoParams, 'Admin Otto'),
                 'mdd'    => $this->fetchRawTransactions($mddConfig['url'], $mddConfig['token'], $mddParams, 'Settlement MDD'),
                 'lokasi' => $this->fetchRawTransactions($lokasiConfig['url'], $lokasiConfig['token'], $lokasiParams, 'Report Lokasi'),
+                'qris' => $this->fetchRawTransactions($ottoConfig['url'], $ottoConfig['token'], $qrisParams, 'QRIS (Otto raw)'),
             ];
         }
     }
@@ -243,6 +254,26 @@ class ReconciliationService
             'has_data' => $hasData,
         ];
     }
+    
+
+    protected function aggregateQrisSums(array $rows): array
+    {
+        $sums = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row) || empty($row['dateout'])) {
+                continue;
+            }
+            if (strtoupper(trim((string) ($row['paymentby'] ?? ''))) !== 'QRIS') {
+                continue;
+            }
+
+            $isoDate = substr((string) $row['dateout'], 0, 10);
+            $sums[$isoDate] = ($sums[$isoDate] ?? 0) + (int) ($row['cost'] ?? 0);
+        }
+
+        return $sums;
+    }
 
     /**
      * Memanggil REST API untuk mengambil transaksi (fallback sekuensial)
@@ -307,14 +338,6 @@ class ReconciliationService
         }
 
         return $params;
-    }
-
-    /**
-     * Helper sementara untuk QRIS agar tidak memicu fatal error method undefined.
-     */
-    protected function getQris(int $ottoSum, string $isoDate): int
-    {
-        return 0;
     }
 
     /**
