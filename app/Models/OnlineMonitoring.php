@@ -17,6 +17,7 @@ class OnlineMonitoring extends Model
         'lokasi_id',
         'jaringan',
         'ip_address',
+        'status',
         'last_update',
         'first_monitored_at',
     ];

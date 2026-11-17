@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\DB;
 
 class LocationService
 {
+    protected ReconciliationService $reconciliationService;
+
+    public function __construct(?ReconciliationService $reconciliationService = null)
+    {
+        $this->reconciliationService = $reconciliationService ?: app(ReconciliationService::class);
+    }
     /**
      * Get locations from database table `lokasis`, with fallback to config.
      *
@@ -15,18 +21,41 @@ class LocationService
      */
     public function getLocations(): array
     {
-        $dbLocations = Lokasi::orderBy('id', 'asc')->get();
+        // 1. Coba ambil dari database lokal jika database aktif
+        try {
+            $dbLocations = Lokasi::orderBy('id', 'asc')->get();
+            if ($dbLocations->isNotEmpty()) {
+                return $dbLocations->map(function ($loc) {
+                    return [
+                        'id' => $loc->id,
+                        'kode' => $loc->id,
+                        'name' => $loc->nama_lokasi,
+                        'address' => $loc->keterangan_alamat ?: '-',
+                        'batas_waktu_henti' => $loc->batas_waktu_henti ?? 60,
+                    ];
+                })->toArray();
+            }
+        } catch (\Throwable $e) {
+            // Database lokal offline / tidak ada
+        }
 
-        if ($dbLocations->isNotEmpty()) {
-            return $dbLocations->map(function ($loc) {
-                return [
-                    'id' => $loc->id,
-                    'kode' => $loc->id,
-                    'name' => $loc->nama_lokasi,
-                    'address' => $loc->keterangan_alamat ?: '-',
-                    'batas_waktu_henti' => $loc->batas_waktu_henti ?? 60,
-                ];
-            })->toArray();
+        // 2. Ambil langsung dari Remote RESTful API domain
+        try {
+            $remoteService = app(RemoteLokasiService::class);
+            $remoteData = $remoteService->getAll();
+            if (!empty($remoteData['data'])) {
+                return array_map(function ($loc) {
+                    return [
+                        'id' => (int) $loc['id'],
+                        'kode' => (int) $loc['id'],
+                        'name' => $loc['nama_lokasi'],
+                        'address' => $loc['keterangan_alamat'] ?: '-',
+                        'batas_waktu_henti' => (int) ($loc['batas_waktu_henti'] ?? 60),
+                    ];
+                }, $remoteData['data']);
+            }
+        } catch (\Throwable $e) {
+            //
         }
 
         return config('monitoring.default_locations', []);
@@ -63,6 +92,8 @@ class LocationService
             'admin' => number_format($admin, 0, ',', '.'),
             'mdd' => number_format($mdd, 0, ',', '.'),
             'settlement' => number_format($mdd, 0, ',', '.'),
+            'qris' => '0',
+            'qris_raw' => 0,
             'report' => number_format($report, 0, ',', '.'),
             'lokal' => number_format($report, 0, ',', '.'),
             'status' => $status,
@@ -90,33 +121,57 @@ class LocationService
         ?int $month = null,
         ?int $year = null
     ): array {
-        $query = DB::table('data')->where('Kode', $kode);
+        // 1. Ambil data rekonsiliasi dari 3 Database Transaksi via API
+        try {
+            $filter = array_filter([
+                'date' => $date,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'month' => $month,
+                'year' => $year,
+            ]);
 
-        if (!empty($startDate) && !empty($endDate)) {
-            $query->whereDate('Tanggal', '>=', $startDate)
-                  ->whereDate('Tanggal', '<=', $endDate);
-        } elseif (!empty($startDate)) {
-            $query->whereDate('Tanggal', '>=', $startDate);
-        } elseif (!empty($endDate)) {
-            $query->whereDate('Tanggal', '<=', $endDate);
-        } elseif (!empty($date)) {
-            $query->whereDate('Tanggal', $date);
-        } elseif (!empty($month) && !empty($year)) {
-            $query->whereYear('Tanggal', $year)
-                  ->whereMonth('Tanggal', $month);
-        } elseif (!empty($year)) {
-            $query->whereYear('Tanggal', $year);
-        } elseif (!empty($month)) {
-            $query->whereMonth('Tanggal', $month);
+            $apiRecords = $this->reconciliationService->getReconciliationData($kode, $filter);
+            if (!empty($apiRecords)) {
+                return $apiRecords;
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("LocationService reconciliation error (Kode {$kode}): " . $e->getMessage());
         }
 
-        $rawRecords = $query->orderBy('Tanggal', 'desc')->get();
+        // 2. Fallback membaca dari tabel data lokal jika ada
+        try {
+            $query = DB::table('data')->where('Kode', $kode);
 
-        $records = [];
-        foreach ($rawRecords as $row) {
-            $records[] = $this->formatRecord($row);
+            if (!empty($startDate) && !empty($endDate)) {
+                $query->whereDate('Tanggal', '>=', $startDate)
+                      ->whereDate('Tanggal', '<=', $endDate);
+            } elseif (!empty($startDate)) {
+                $query->whereDate('Tanggal', '>=', $startDate);
+            } elseif (!empty($endDate)) {
+                $query->whereDate('Tanggal', '<=', $endDate);
+            } elseif (!empty($date)) {
+                $query->whereDate('Tanggal', $date);
+            } elseif (!empty($month) && !empty($year)) {
+                $query->whereYear('Tanggal', $year)
+                      ->whereMonth('Tanggal', $month);
+            } elseif (!empty($year)) {
+                $query->whereYear('Tanggal', $year);
+            } elseif (!empty($month)) {
+                $query->whereMonth('Tanggal', $month);
+            }
+
+            $rawRecords = $query->orderBy('Tanggal', 'desc')->get();
+
+            $records = [];
+            foreach ($rawRecords as $row) {
+                $records[] = $this->formatRecord($row);
+            }
+
+            return $records;
+        } catch (\Throwable $e) {
+            // Database lokal offline / tabel data tidak ada
+            return [];
         }
-
-        return $records;
     }
 }

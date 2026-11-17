@@ -6,6 +6,12 @@
     </div>
 @endif
 
+<!-- Dynamic API Error Alert -->
+<div id="loginAlert" class="hidden w-full mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold flex items-center gap-2">
+    <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0 text-rose-600"></i>
+    <span id="loginAlertText"></span>
+</div>
+
 <!-- Login Form -->
 <form method="POST" action="{{ route('login.post') }}" id="loginForm" class="w-full flex flex-col gap-6">
     @csrf

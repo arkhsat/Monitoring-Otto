@@ -4,17 +4,32 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LokasiRequest;
 use App\Models\Lokasi;
+use App\Services\RemoteLokasiService;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class LokasiController extends Controller
 {
+    protected RemoteLokasiService $remoteService;
+
+    public function __construct(RemoteLokasiService $remoteService)
+    {
+        $this->remoteService = $remoteService;
+    }
+
     /**
      * Display a listing of locations.
      */
     public function index(): View
     {
-        $lokasis = Lokasi::orderBy('created_at', 'desc')->get();
+        // Ambil data lokasi langsung dari API domain remote
+        $result = $this->remoteService->getAll();
+        $items = $result['data'] ?? [];
+
+        $lokasis = collect($items)->map(function ($item) {
+            return (object) $item;
+        });
 
         return view('pages.lokasi.index', compact('lokasis'));
     }
@@ -26,7 +41,6 @@ class LokasiController extends Controller
     {
         $validated = $request->validated();
 
-        // Remove empty keys if any so model boot/defaults kick in
         if (empty($validated['uuid_lokasi'])) {
             unset($validated['uuid_lokasi']);
         }
@@ -34,9 +48,12 @@ class LokasiController extends Controller
             unset($validated['api_lokasi']);
         }
 
-        Lokasi::create($validated);
-
-        return redirect()->route('dashboard.lokasi')->with('success', 'Lokasi baru berhasil ditambahkan! UUID dan API Lokasi otomatis di-hash.');
+        try {
+            $this->remoteService->create($validated);
+            return redirect()->route('dashboard.lokasi')->with('success', 'Lokasi baru berhasil ditambahkan ke database domain!');
+        } catch (Exception $e) {
+            return redirect()->route('dashboard.lokasi')->with('error', 'Gagal menambahkan lokasi: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -44,10 +61,8 @@ class LokasiController extends Controller
      */
     public function update(LokasiRequest $request, int $id): RedirectResponse
     {
-        $lokasi = Lokasi::findOrFail($id);
         $validated = $request->validated();
 
-        // Do not overwrite existing hash if user left the fields blank in edit form
         if (empty($validated['uuid_lokasi'])) {
             unset($validated['uuid_lokasi']);
         }
@@ -55,9 +70,12 @@ class LokasiController extends Controller
             unset($validated['api_lokasi']);
         }
 
-        $lokasi->update($validated);
-
-        return redirect()->route('dashboard.lokasi')->with('success', 'Lokasi berhasil diperbarui!');
+        try {
+            $this->remoteService->update($id, $validated);
+            return redirect()->route('dashboard.lokasi')->with('success', 'Lokasi berhasil diperbarui di database domain!');
+        } catch (Exception $e) {
+            return redirect()->route('dashboard.lokasi')->with('error', 'Gagal memperbarui lokasi: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -65,9 +83,11 @@ class LokasiController extends Controller
      */
     public function destroy(int $id): RedirectResponse
     {
-        $lokasi = Lokasi::findOrFail($id);
-        $lokasi->delete();
-
-        return redirect()->route('dashboard.lokasi')->with('success', 'Lokasi berhasil dihapus!');
+        try {
+            $this->remoteService->delete($id);
+            return redirect()->route('dashboard.lokasi')->with('success', 'Lokasi berhasil dihapus dari database domain!');
+        } catch (Exception $e) {
+            return redirect()->route('dashboard.lokasi')->with('error', 'Gagal menghapus lokasi: ' . $e->getMessage());
+        }
     }
 }

@@ -1,58 +1,84 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Monitoring Otto
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web berbasis **Laravel 11** untuk pemantauan transaksi parkir, rekonsiliasi data multi-sumber (**Admin Otto**, **Settlement MDD**, dan **Report Lokasi**), manajemen master lokasi, serta monitoring status online perangkat di lapangan.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Ringkasan Arsitektur
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Aplikasi ini dapat berjalan dalam dua mode konfigurasi:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 1. Full-API Mode (Default Aktif)
+Pada `.env` saat ini, konfigurasi database lokal (`# DB_CONNECTION=mysql`) dinonaktifkan (commented out) sehingga aplikasi beroperasi langsung terhadap API remote di cPanel:
+- **Konfigurasi Remote API**: `MONITORING_API_URL` dan `MONITORING_API_TOKEN` (dikelola melalui `config/services.php` pada key `monitoring_api`).
+- **Session & Auth Fallback**: Menggunakan `SESSION_DRIVER=file` serta custom provider `custom_eloquent` (`App\Auth\CustomUserProvider` yang didaftarkan oleh `App\Providers\AppServiceProvider`) dengan fallback `session('logged_user')` dan verifikasi remote `/login.php`.
+- **Sinkronisasi Tabel cPanel**: Perubahan skema pada `database/migrations/` menjadi referensi DDL untuk dijalankan di **phpMyAdmin cPanel**. **Jangan** menjalankan `php artisan migrate` secara lokal saat `DB_CONNECTION` masih nonaktif.
 
-## Learning Laravel
+### 2. Local DB Mode (Opsional)
+Jika ingin mengaktifkan database MySQL/SQLite lokal:
+1. Aktifkan konfigurasi `DB_CONNECTION` dan kredensial database di `.env`.
+2. Jalankan migrasi tabel:
+   ```bash
+   php artisan migrate
+   ```
+3. Beberapa controller/service (`TransactionController`, `MonitoringController`, `CustomUserProvider`) mendukung fallback lokal apabila database lokal tersedia.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Tech Stack
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+- **Backend**: PHP `^8.2`, Laravel Framework `^11.0`, Laravel Sanctum `^4.0`
+- **Frontend**: Blade Templates, Tailwind CSS `^4.0` (`@tailwindcss/vite`), Vite `^7.0.7`, Axios `^1.11.0`
+- **Dev & Testing**: PHPUnit `^11.0`, Concurrently `^9.0.1`
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Menjalankan Proyek Secara Lokal
 
+### Prasyarat
+- PHP >= 8.2, Composer, Node.js & npm
+- File `.env` dengan `MONITORING_API_URL` dan `MONITORING_API_TOKEN` (gunakan `.env.example` sebagai acuan awal dan isi konfigurasi monitoring API tanpa menuliskan token ke git).
+
+### Instalasi & Menjalankan Server Dev
 ```bash
-composer require laravel/boost --dev
+# Install dependensi PHP & JS (atau gunakan script composer setup jika memakai DB lokal)
+composer install
+npm install
 
-php artisan boost:install
+# Jalankan server Laravel & Vite secara bersamaan
+composer dev
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Untuk build asset produksi:
+```bash
+npm run build
+```
 
-## Contributing
+Untuk menjalankan unit/feature test PHPUnit:
+```bash
+composer test
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Fitur & Struktur Direktori Penting
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+| Area | File / Direktori Utama | Penjelasan Singkat |
+| :--- | :--- | :--- |
+| **Main Menu / Rekonsiliasi** | `app/Http/Controllers/DashboardController.php`<br>`app/Http/Controllers/Api/MonitoringController.php`<br>`app/Services/ReconciliationService.php`<br>`app/Services/LocationService.php`<br>`resources/views/pages/dashboard/` | Menampilkan perbandingan nominal harian **Admin Otto**, **Settlement MDD**, dan **Report Lokasi** beserta status kecocokannya. `ReconciliationService` mengambil ketiga sumber secara paralel menggunakan `Http::pool()` dan default 30 hari terakhir saat filter kosong. |
+| **Transaksi & Sumber Data** | `app/Http/Controllers/Api/TransactionController.php`<br>`app/Models/Transaction.php`<br>`app/Models/SumberTransaksi.php`<br>`database/migrations/2026_11_11_*` | Proxy endpoint `GET`/`POST /api/transactions` serta pemetaan `sumber_id` (`1` = Report Lokasi & Admin Otto, `2` = Settlement MDD). |
+| **Master Lokasi & Token** | `app/Http/Controllers/LokasiController.php`<br>`app/Http/Controllers/Api/LokasiApiController.php`<br>`app/Services/RemoteLokasiService.php`<br>`app/Http/Requests/LokasiRequest.php`<br>`app/Http/Resources/LokasiResource.php`<br>`resources/views/pages/lokasi/partials/lokasi-modal.blade.php` | Pengelolaan daftar lokasi beserta URL & token per sumber (`api_token_otto`, `api_token_mdd`, `api_token_lokasi`, `api_url_otto`, `api_url_mdd`, `api_url_lokasi`). |
+| **Online Monitoring** | `app/Http/Controllers/OnlineMonitoringController.php`<br>`app/Http/Controllers/Api/OnlineMonitoringApiController.php`<br>`app/Services/OnlineMonitoringService.php`<br>`routes/console.php` | Memantau perangkat online/gangguan/offline menggunakan remote endpoint `/online_monitoring.php` dengan ambang batas `300s` (online), `600s` (gangguan), dan periode penuh `86400s`, serta command `app:status-online-monitoring`. |
+| **Autentikasi** | `app/Http/Controllers/AuthController.php`<br>`app/Http/Controllers/Api/AuthApiController.php`<br>`app/Auth/CustomUserProvider.php`<br>`resources/views/pages/auth/login.blade.php` | Autentikasi web & API (`statefulApi()` di `bootstrap/app.php`) dengan fallback login remote. |
+| **Fallback Config Default** | `config/monitoring.php` | Data fallback `default_locations` dan `network_devices`. |
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Dokumentasi & Kustomisasi Agent
 
-## License
+Proyek ini dilengkapi aturan workspace dan skill khusus untuk AI coding agent serta referensi API:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- [AGENTS.md](./AGENTS.md) — Aturan utama workspace, konvensi arsitektur Full-API, batasan environment, dan peta file proyek.
+- [docs/API_ENDPOINTS.md](./docs/API_ENDPOINTS.md) — Daftar lengkap endpoint RESTful Laravel (`/api/*`) dan cPanel (`/api/*`), parameter filter query, serta format payload transaksi.
+- [.agents/skills/reconciliation-api/SKILL.md](./.agents/skills/reconciliation-api/SKILL.md) — Panduan detail alur rekonsiliasi Menu Main dan query transaksi multi-sumber.
+- [.agents/skills/cpanel-api-sync/SKILL.md](./.agents/skills/cpanel-api-sync/SKILL.md) — Panduan sinkronisasi endpoint PHP cPanel, aturan `.htaccess`, Full-API fallback, dan paritas skema MySQL.

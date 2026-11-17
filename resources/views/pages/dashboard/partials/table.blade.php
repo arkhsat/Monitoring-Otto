@@ -12,7 +12,7 @@
                     <th class="py-3 px-4 text-center">Settlement MDD</th>
                     <th class="py-3 px-4 text-center">Report Lokasi</th>
                     <th class="py-3 px-4 text-center">Keterangan</th>
-                    <th class="py-3 px-4 text-center">Send settlement MDD</th>
+                    <th class="py-3 px-4 text-center">Send Settlement MDD</th>
                 </tr>
             </thead>
 
@@ -23,29 +23,32 @@
                         $date = $row['date'] ?? '-';
                         $admin = $row['admin'] ?? '-';
                         $mdd = $row['mdd'] ?? '-';
+                        $qris = $row['qris'] ?? '0';
                         $report = $row['report'] ?? '-';
                         $status = $row['status'] ?? 'Cocok';
                         $isNotMatch = ($status === 'Tidak Cocok');
                         $textColor = $isNotMatch ? 'text-[#FF0000]' : 'text-[#00B050]';
-                        $ismddempty = ($mdd === '-');
                     @endphp
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="py-4 px-4 font-normal text-slate-800">{{ $date }}</td>
                         <td class="py-4 px-4 font-bold {{ $textColor }}">{{ $admin }}</td>
-                        <td class="py-4 px-4 font-bold {{ $textColor }}">{{ $mdd }}</td>
+                        <td class="py-4 px-4">
+                            <div class="flex flex-col items-center justify-center gap-1">
+                                <span class="font-bold {{ $textColor }}">{{ $mdd }}</span>
+                                <span class="inline-flex items-center gap-1 text-slate-800 font-normal text-sm">
+                                    <img src="{{ asset('images/banks/QRIS.png') }}" alt="QRIS" class="h-4 w-auto object-contain">
+                                    <span>: {{ $qris }}</span>
+                                </span>
+                            </div>
+                        </td>
                         <td class="py-4 px-4 font-bold {{ $textColor }}">{{ $report }}</td>
                         <td class="py-4 px-4 font-bold {{ $textColor }}">
                             {{ $status }}
                         </td>
                         <td class="py-4 px-4">
-                            @if ($ismddempty)
+                            @if ($isNotMatch)
                                 <button type="button" 
-                                        onclick="openSettlementModal({
-                                            date: '{{ $date }}',
-                                            admin: '{{ $admin }}',
-                                            mdd: '{{ $mdd }}',
-                                            report: '{{ $report }}'
-                                        })"
+                                        onclick='openSettlementModal(@json($row))'
                                         class="inline-flex items-center justify-center px-5 py-1.5 bg-[#0079C6] hover:bg-[#005f9e] active:scale-95 text-white text-sm font-semibold rounded-lg shadow-sm transition-all cursor-pointer">
                                     Send
                                 </button>

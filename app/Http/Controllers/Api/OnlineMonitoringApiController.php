@@ -158,5 +158,36 @@ class OnlineMonitoringApiController extends Controller
             ], 422);
         }
     }
+
+    /**
+     * Trigger / execute status monitoring cron job via RESTful API.
+     * Can be invoked by external webcron services, dashboard, or server curl jobs.
+     *
+     * GET/POST /api/cron/status-monitoring
+     */
+    public function cronStatus(): JsonResponse
+    {
+        try {
+            $result = $this->monitoringService->syncAllStatuses();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cronjob status online/offline berhasil dijalankan langsung ke database',
+                'executed_at' => now()->toIso8601String(),
+                'summary' => [
+                    'total' => $result['total'],
+                    'online' => $result['online'],
+                    'offline' => $result['offline'],
+                    'changes' => $result['changes'],
+                ],
+                'data' => $result['details'],
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menjalankan cronjob status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }
 

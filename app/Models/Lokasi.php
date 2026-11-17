@@ -18,6 +18,12 @@ class Lokasi extends Model
         'batas_waktu_henti',
         'uuid_lokasi',
         'api_lokasi',
+        'api_token_otto',
+        'api_url_otto',
+        'api_token_mdd',
+        'api_url_mdd',
+        'api_token_lokasi',
+        'api_url_lokasi',
     ];
 
     /**
@@ -63,5 +69,21 @@ class Lokasi extends Model
     public function monitoringHistories()
     {
         return $this->hasMany(OnlineMonitoringHistory::class, 'lokasi_id');
+    }
+
+    /**
+     * Get all transactions for this location.
+     */
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'lokasi_id');
+    }
+
+    /**
+     * Get all settlement files for this location.
+     */
+    public function settlements()
+    {
+        return $this->hasMany(Settlement::class, 'lokasi_id');
     }
 }
